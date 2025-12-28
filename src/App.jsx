@@ -597,7 +597,7 @@ GamepadIcon.displayName = 'GamepadIcon';
 // --- Layout Components ---
 
 const Card = ({ children, className = "" }) => (
-  <div className={`bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl border border-white/20 dark:border-white/10 shadow-lg rounded-2xl p-5 ${className} transition-all duration-300`}>
+  <div className={`bg-white/90 dark:bg-gray-800/90 backdrop-blur-xl border border-white/20 dark:border-white/10 shadow-lg rounded-2xl p-5 ${className} transition-all duration-300 text-gray-900 dark:text-white`}>
     {children}
   </div>
 );
@@ -662,7 +662,9 @@ const NotificationSwitch = ({ checked, onChange }) => (
 const IconButton = ({ Icon, active, onClick, theme }) => (
   <button 
     onClick={onClick}
-    className={`flex-1 p-2 rounded-xl transition-all duration-200 group flex flex-col items-center justify-center gap-1 ${active ? `${theme.lightBg} ${theme.text}` : 'text-gray-400 hover:bg-gray-100 dark:hover:bg-white/5'}`}
+    // FIX: Removed sticky hover states on mobile by using 'md:hover'. 
+    // Added 'active:bg-gray-100' for immediate touch feedback.
+    className={`flex-1 p-2 rounded-xl transition-all duration-200 group flex flex-col items-center justify-center gap-1 focus:outline-none ${active ? `${theme.lightBg} ${theme.text}` : 'text-gray-400 md:hover:bg-gray-100 dark:md:hover:bg-white/5 active:bg-gray-100 dark:active:bg-gray-800'}`}
   >
     <Icon size={24} className={`transition-transform duration-300 ${active ? 'scale-110' : 'group-hover:scale-105'}`} />
     <span className="text-[9px] font-medium tracking-wide">{active && <span className={`w-1 h-1 ${theme.dot} rounded-full inline-block mt-1`}></span>}</span>
@@ -678,8 +680,11 @@ const DinoGame = () => {
     const [gameState, setGameState] = useState('start'); // 'start', 'playing', 'gameover'
     const requestRef = useRef();
 
+    // Refs for Swipe Detection inside Game
+    const gameTouchStart = useRef({ x: 0, y: 0 });
+
     const gameData = useRef({
-        gameSpeed: 5,
+        gameSpeed: 10,
         frame: 0,
         dino: {
             x: 50, y: 0, width: 44, height: 44, dy: 0, jumpCount: 0, maxJumps: 3, rotation: 0
@@ -758,6 +763,27 @@ const DinoGame = () => {
         }
     }, []);
 
+    // Helper to detect Jump vs Swipe
+    const handleGameTouchStart = (e) => {
+        gameTouchStart.current = {
+            x: e.changedTouches[0].clientX,
+            y: e.changedTouches[0].clientY
+        };
+    };
+
+    const handleGameTouchEnd = (e) => {
+        const endX = e.changedTouches[0].clientX;
+        const endY = e.changedTouches[0].clientY;
+        const diffX = Math.abs(endX - gameTouchStart.current.x);
+        const diffY = Math.abs(endY - gameTouchStart.current.y);
+
+        // If movement is small, treat as TAP (Jump)
+        // If movement is large, let it bubble (Swipe Navigation)
+        if (diffX < 10 && diffY < 10) {
+            jump();
+        }
+    };
+
     const startGame = () => {
         const canvas = canvasRef.current;
         const gd = gameData.current;
@@ -765,7 +791,7 @@ const DinoGame = () => {
         gd.isPlaying = true;
         gd.isGameOver = false;
         setScore(0);
-        gd.gameSpeed = 3; // Initial speed
+        gd.gameSpeed = 2; // Initial speed
         gd.obstacles = [];
         gd.particles = [];
         // Reset Physics
@@ -807,7 +833,7 @@ const DinoGame = () => {
         ctx.clearRect(0, 0, logicalWidth, logicalHeight);
         gd.frame++;
 
-        if(gd.frame % 500 === 0) gd.gameSpeed += 0.5;
+        if(gd.frame % 1000 === 0) gd.gameSpeed += 0.2;
         
         if(gd.frame % 10 === 0) {
             setScore(score.current + 1);
@@ -966,17 +992,8 @@ const DinoGame = () => {
         setTimeout(resizeCanvas, 100);
         window.addEventListener('resize', resizeCanvas);
 
-        // Controls
-        const handleInput = (e) => {
-             // If we are touching a button, don't jump (prevent double trigger)
-             if (e.target.tagName === 'BUTTON') return;
-             jump();
-        };
-
-        const canvas = canvasRef.current;
-        canvas.addEventListener('touchstart', (e) => { e.preventDefault(); handleInput(e); }, {passive: false});
-        canvas.addEventListener('mousedown', handleInput);
-        
+        // FIX: Removed the native listeners that were capturing ALL events aggressively
+        // and causing the swipe-prevention issue.
         const handleKeyDown = (e) => {
             if (e.code === 'Space' || e.code === 'ArrowUp') { 
                 e.preventDefault(); 
@@ -988,8 +1005,6 @@ const DinoGame = () => {
         return () => {
             window.removeEventListener('resize', resizeCanvas);
             window.removeEventListener('keydown', handleKeyDown);
-            canvas.removeEventListener('touchstart', handleInput);
-            canvas.removeEventListener('mousedown', handleInput);
             cancelAnimationFrame(requestRef.current);
         };
     }, [jump]);
@@ -1011,7 +1026,14 @@ const DinoGame = () => {
                 </div>
             </div>
 
-            <canvas ref={canvasRef} className="block w-full h-full" />
+            {/* FIX: Use React props instead of native listeners to allow event bubbling for swipes */}
+            <canvas 
+                ref={canvasRef} 
+                className="block w-full h-full"
+                onTouchStart={handleGameTouchStart}
+                onTouchEnd={handleGameTouchEnd}
+                onMouseDown={jump} // For desktop click support
+            />
 
             {/* UI Overlay */}
             {(gameState === 'start' || gameState === 'gameover') && (
@@ -1142,6 +1164,8 @@ const SplashScreen = () => {
 
 // --- Main App Component ---
 
+const VIEWS = ['dashboard', 'planner', 'storage', 'game', 'settings'];
+
 export default function App() {
   // --- State ---
   const [view, setView] = useState('dashboard');
@@ -1159,6 +1183,10 @@ export default function App() {
   const [notificationTime, setNotificationTime] = useState('09:00');
   const [notificationStatus, setNotificationStatus] = useState(''); // '' | 'saved' | 'checking'
   const lastNotificationDate = useRef(null);
+
+  // Swipe Gesture State
+  const [touchStart, setTouchStart] = useState(null);
+  const [touchEnd, setTouchEnd] = useState(null);
 
   const currentTheme = THEMES[colorTheme] || THEMES.green;
 
@@ -1381,10 +1409,44 @@ export default function App() {
       }
   };
 
+  // --- Swipe Gesture Handlers ---
+  const minSwipeDistance = 50;
+
+  const onTouchStart = (e) => {
+    setTouchEnd(null); // otherwise the swipe is fired even with usual touch events
+    setTouchStart(e.targetTouches[0].clientX);
+  };
+
+  const onTouchMove = (e) => setTouchEnd(e.targetTouches[0].clientX);
+
+  const onTouchEnd = () => {
+    if (!touchStart || !touchEnd) return;
+    const distance = touchStart - touchEnd;
+    const isLeftSwipe = distance > minSwipeDistance;
+    const isRightSwipe = distance < -minSwipeDistance;
+
+    // Disabled restriction: Now swipes work on Game page too
+
+    if (isLeftSwipe || isRightSwipe) {
+        const currentIndex = VIEWS.indexOf(view);
+        if (isLeftSwipe) {
+            // Next View
+            if (currentIndex < VIEWS.length - 1) {
+                setView(VIEWS[currentIndex + 1]);
+            }
+        } else {
+            // Previous View
+            if (currentIndex > 0) {
+                setView(VIEWS[currentIndex - 1]);
+            }
+        }
+    }
+  };
+
   // --- Render Views ---
 
   const renderDashboard = () => (
-    <div className="space-y-6 pb-40 animate-fade-in">
+    <div className="space-y-6 pb-40 animate-fade-in text-gray-900 dark:text-white">
       {/* Header Profile & Summary */}
       <div className="flex justify-between items-start mb-4 px-2">
         <div className="flex flex-col gap-4 items-start">
@@ -1517,7 +1579,7 @@ export default function App() {
     const isLocked = monthlyData[selectedMonth]?.isSaved;
 
     return (
-    <div className="animate-fade-in flex flex-col pb-40">
+    <div className="animate-fade-in flex flex-col pb-40 text-gray-900 dark:text-white">
       <div className="flex items-center justify-between mb-4 px-1">
         <button 
           onClick={() => setSelectedMonth(prev => Math.max(0, prev - 1))}
@@ -1653,7 +1715,7 @@ export default function App() {
     const net = totalProfit - totalLoss;
     
     return (
-      <div className="animate-fade-in space-y-5 pb-40">
+      <div className="animate-fade-in space-y-5 pb-40 text-gray-900 dark:text-white">
          <h2 className="text-xl font-bold mb-4 text-gray-900 dark:text-white">Data Storage</h2>
   
          {/* Net Summary Card */}
@@ -1662,10 +1724,10 @@ export default function App() {
                <span className="text-indigo-100 text-xs font-medium uppercase tracking-wider">Net Balance</span>
                <Database size={18} className="text-indigo-200" />
             </div>
-            <div className="text-2xl font-bold mb-3">
+            <div className="text-2xl font-bold mb-3 text-white">
                {formatCurrency(net)}
             </div>
-            <div className="flex gap-3 text-xs">
+            <div className="flex gap-3 text-xs text-white">
                <div className="bg-white/20 px-2 py-1 rounded-md flex items-center backdrop-blur-md">
                   <TrendingUp size={12} className="mr-1 text-emerald-300" /> {formatCurrency(totalProfit)}
                </div>
@@ -1739,7 +1801,7 @@ export default function App() {
   }
 
   const renderSettings = () => (
-    <div className="animate-fade-in space-y-5 pb-24">
+    <div className="animate-fade-in space-y-5 pb-24 text-gray-900 dark:text-white">
       <h2 className="text-xl font-bold mb-4 text-gray-900 dark:text-white">Settings</h2>
 
       {/* Theme Picker */}
@@ -1875,8 +1937,13 @@ export default function App() {
       {/* Main Layout Container - Mobile Optimized */}
       <div className="relative h-full w-full sm:max-w-md sm:mx-auto sm:bg-white/50 dark:sm:bg-gray-900/50 sm:shadow-2xl sm:h-[95vh] sm:mt-[2.5vh] sm:rounded-[40px] sm:border-[8px] sm:border-gray-200 dark:sm:border-gray-800 flex flex-col backdrop-blur-sm overflow-hidden">
         
-        {/* Content Area */}
-        <div className="flex-1 overflow-y-auto p-4 scrollbar-hide">
+        {/* Content Area with Swipe Detection */}
+        <div 
+            className="flex-1 overflow-y-auto p-4 scrollbar-hide touch-pan-y" 
+            onTouchStart={onTouchStart} 
+            onTouchMove={onTouchMove} 
+            onTouchEnd={onTouchEnd}
+        >
            {view === 'dashboard' && renderDashboard()}
            {view === 'planner' && renderPlanner()}
            {view === 'storage' && renderStorage()}
@@ -1888,30 +1955,35 @@ export default function App() {
         <div className="absolute bottom-0 left-0 right-0 sm:static p-4 z-50">
           <div className="bg-white/90 dark:bg-gray-900/90 backdrop-blur-xl border border-gray-200/50 dark:border-gray-700/50 rounded-2xl p-1.5 flex justify-between items-center shadow-lg shadow-gray-200/50 dark:shadow-black/50">
             <IconButton 
+              key="dashboard"
               Icon={ChartColumnIncreasingIcon} 
               active={view === 'dashboard'} 
               onClick={() => setView('dashboard')}
               theme={currentTheme}
             />
             <IconButton 
+              key="planner"
               Icon={CalendarCheckIcon} 
               active={view === 'planner'} 
               onClick={() => setView('planner')}
               theme={currentTheme}
             />
             <IconButton 
+              key="storage"
               Icon={DatabaseIcon} 
               active={view === 'storage'} 
               onClick={() => setView('storage')}
               theme={currentTheme}
             />
             <IconButton 
+              key="game"
               Icon={GamepadIcon} 
               active={view === 'game'}
               onClick={() => setView('game')}
               theme={currentTheme}
             />
             <IconButton 
+              key="settings"
               Icon={CogIcon} 
               active={view === 'settings'} 
               onClick={() => setView('settings')}
@@ -1929,6 +2001,10 @@ export default function App() {
             font-family: 'Inter', sans-serif;
         }
 
+        .touch-pan-y {
+            touch-action: pan-y;
+        }
+
         .scrollbar-hide::-webkit-scrollbar {
             display: none;
         }
@@ -1943,7 +2019,7 @@ export default function App() {
         .animate-bounce-short {
           animation: bounce-short 0.5s ease-in-out;
         }
-        @keyframes fade-in {  
+        @keyframes fade-in {
           from { opacity: 0; transform: translateY(10px); }
           to { opacity: 1; transform: translateY(0); }
         }
