@@ -23,7 +23,10 @@ import {
   Unlock,
   Bell,
   Clock,
-  Gamepad2 
+  Gamepad2,
+  Play,
+  Car,
+  Siren
 } from 'lucide-react';
 
 // --- Utility Functions ---
@@ -37,19 +40,6 @@ const formatCurrency = (value) => {
     maximumFractionDigits: 0,
   }).format(value);
 };
-
-// --- Custom Hooks ---
-
-// Helper to expose state to animation loops without staleness
-function useRefValue(initialValue) {
-    const [val, setVal] = useState(initialValue);
-    const ref = useRef(val);
-    const set = (v) => {
-        ref.current = v;
-        setVal(v);
-    };
-    return [ref, set];
-}
 
 // --- Mock Data & Constants ---
 const MONTHS = [
@@ -671,397 +661,119 @@ const IconButton = ({ Icon, active, onClick, theme }) => (
   </button>
 );
 
-// --- Game Component (Dino Run iOS) ---
-const DinoGame = () => {
-    const canvasRef = useRef(null);
-    const containerRef = useRef(null);
-    const [score, setScore] = useRefValue(0); 
-    const [highScore, setHighScore] = useState(parseInt(localStorage.getItem('dinoHighScore') || '0'));
-    const [gameState, setGameState] = useState('start'); // 'start', 'playing', 'gameover'
-    const requestRef = useRef();
+// --- Escape Road Game Component ---
+// Incorporates High-DPI scaling and Focus management
+const EscapeRoadGame = () => {
+  const iframeRef = useRef(null);
+  const containerRef = useRef(null);
+  const [loading, setLoading] = useState(true);
+  const [isPlaying, setIsPlaying] = useState(false);
 
-    // Refs for Swipe Detection inside Game
-    const gameTouchStart = useRef({ x: 0, y: 0 });
+  // Resize logic
+  useEffect(() => {
+     if (!isPlaying) return;
 
-    const gameData = useRef({
-        gameSpeed: 10,
-        frame: 0,
-        dino: {
-            x: 50, y: 0, width: 44, height: 44, dy: 0, jumpCount: 0, maxJumps: 3, rotation: 0
-        },
-        obstacles: [],
-        particles: [],
-        clouds: [],
-        gravity: 0.6,
-        jumpForce: -12,
-        groundHeight: 50,
-        isGameOver: false,
-        isPlaying: false
-    });
-    
-    // Dino Sprite
-    const dinoImageRef = useRef(new Image());
-    
-    useEffect(() => {
-        dinoImageRef.current.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cpath d='M80,35 C80,22 70,15 58,15 H45 C35,15 30,22 30,30 V45 C30,55 35,60 40,62 V75 L30,75 V85 H45 V75 H50 V85 H65 V75 L70,75 V55 H55 C52,55 50,52 50,50 C50,48 52,45 55,45 H80 V35 Z M60,30 C57,30 55,28 55,25 C55,22 57,20 60,20 C63,20 65,22 65,25 C65,28 63,30 60,30 Z' fill='%231C1C1E'/%3E%3C/svg%3E";
-    }, []);
-
-    const spawnObstacle = (canvasWidth, canvasHeight) => {
-        const minHeight = 30;
-        const maxHeight = 60;
-        const height = Math.floor(Math.random() * (maxHeight - minHeight + 1) + minHeight);
+     const resizeGame = () => {
+        if (!iframeRef.current || !containerRef.current) return;
         
-        gameData.current.obstacles.push({
-            x: canvasWidth,
-            y: canvasHeight - gameData.current.groundHeight - height,
-            width: 24, 
-            height: height,
-            color: '#FF3B30', 
-            passed: false
-        });
-    };
-
-    const spawnCloud = (canvasWidth, canvasHeight) => {
-        const y = Math.random() * (canvasHeight / 2);
-        gameData.current.clouds.push({
-            x: canvasWidth,
-            y: y,
-            width: 60 + Math.random() * 40,
-            height: 30,
-            speed: 1 + Math.random() * 0.5
-        });
-    };
-
-    const createParticles = (x, y, color) => {
-        for(let i=0; i<8; i++) {
-            gameData.current.particles.push({
-                x: x,
-                y: y,
-                radius: Math.random() * 3 + 1,
-                dx: (Math.random() - 0.5) * 5,
-                dy: (Math.random() - 0.5) * 5,
-                life: 1,
-                color: color
-            });
-        }
-    };
-
-    const jump = useCallback(() => {
-        const gd = gameData.current;
-        if (gd.isGameOver) return;
+        const container = containerRef.current;
+        const width = container.clientWidth;
+        const height = container.clientHeight;
         
-        if (!gd.isPlaying) {
-            startGame();
-            return;
-        }
-
-        if (gd.dino.jumpCount < gd.dino.maxJumps) {
-            gd.dino.dy = gd.jumpForce;
-            gd.dino.jumpCount++;
-            gd.dino.rotation = -15; 
-            createParticles(gd.dino.x + gd.dino.width/2, gd.dino.y + gd.dino.height, '#8E8E93');
-        }
-    }, []);
-
-    // Helper to detect Jump vs Swipe
-    const handleGameTouchStart = (e) => {
-        gameTouchStart.current = {
-            x: e.changedTouches[0].clientX,
-            y: e.changedTouches[0].clientY
-        };
-    };
-
-    const handleGameTouchEnd = (e) => {
-        const endX = e.changedTouches[0].clientX;
-        const endY = e.changedTouches[0].clientY;
-        const diffX = Math.abs(endX - gameTouchStart.current.x);
-        const diffY = Math.abs(endY - gameTouchStart.current.y);
-
-        // If movement is small, treat as TAP (Jump)
-        // If movement is large, let it bubble (Swipe Navigation)
-        if (diffX < 10 && diffY < 10) {
-            jump();
-        }
-    };
-
-    const startGame = () => {
-        const canvas = canvasRef.current;
-        const gd = gameData.current;
+        // High-DPI Scaling Logic adapted from user provided script
+        const dpr = window.devicePixelRatio || 1;
+        const scale = Math.min(dpr, 2.5);
         
-        gd.isPlaying = true;
-        gd.isGameOver = false;
-        setScore(0);
-        gd.gameSpeed = 2; // Initial speed
-        gd.obstacles = [];
-        gd.particles = [];
-        // Reset Physics
-        const scaledGroundHeight = gd.groundHeight; // Use consistent logic
-        gd.dino.y = (canvas.height / (window.devicePixelRatio || 1)) - scaledGroundHeight - gd.dino.height;
-        gd.dino.dy = 0;
-        gd.dino.jumpCount = 0;
-        
-        setGameState('playing');
-        requestRef.current = requestAnimationFrame(animate);
-    };
+        // Apply styles to iframe
+        iframeRef.current.style.width = `${width * scale}px`;
+        iframeRef.current.style.height = `${height * scale}px`;
+        iframeRef.current.style.transform = `scale(${1 / scale})`;
+        iframeRef.current.style.transformOrigin = 'top left';
+     };
 
-    const gameOver = () => {
-        const gd = gameData.current;
-        gd.isGameOver = true;
-        gd.isPlaying = false;
-        cancelAnimationFrame(requestRef.current);
-        
-        if(score.current > highScore) {
-            setHighScore(score.current);
-            localStorage.setItem('dinoHighScore', score.current.toString());
-        }
-        setGameState('gameover');
-    };
+     // Initial resize
+     // Short delay to ensure iframe is rendered in DOM
+     setTimeout(resizeGame, 50);
+     
+     // Resize observer is better than window resize for responsive containers
+     const observer = new ResizeObserver(resizeGame);
+     if (containerRef.current) observer.observe(containerRef.current);
 
-    const animate = () => {
-        const canvas = canvasRef.current;
-        if (!canvas) return;
-        const ctx = canvas.getContext('2d');
-        const gd = gameData.current;
-        
-        // Logical dimensions (CSS pixels)
-        const logicalWidth = canvas.width / (window.devicePixelRatio || 1);
-        const logicalHeight = canvas.height / (window.devicePixelRatio || 1);
+     return () => observer.disconnect();
+  }, [isPlaying]);
 
-        if(!gd.isPlaying) return;
+  // Focus logic
+  const handleFocus = () => {
+      if (iframeRef.current) {
+          iframeRef.current.contentWindow.focus();
+      }
+  };
 
-        // Clear using logical dimensions since we scaled the context
-        ctx.clearRect(0, 0, logicalWidth, logicalHeight);
-        gd.frame++;
+  return (
+    <div ref={containerRef} className="w-full h-full relative overflow-hidden bg-[#1a1a1a]" onClick={isPlaying ? handleFocus : undefined}>
+       {!isPlaying ? (
+           <div className="absolute inset-0 flex flex-col items-center justify-center bg-gray-900 z-20 overflow-hidden group cursor-pointer" onClick={() => setIsPlaying(true)}>
+               {/* 1. Image Background */}
+               <div className="absolute inset-0 bg-gray-900">
+                  <img 
+                    src="https://m.media-amazon.com/images/I/81CaNyaWp2L.png" 
+                    alt="Escape Road Thumbnail" 
+                    className="w-full h-full object-cover opacity-60 group-hover:opacity-100 transition-opacity duration-700 hover:scale-105 transform"
+                    onError={(e) => {
+                      e.target.style.display = 'none'; // Hide if broken
+                    }}
+                  />
+                  <div className="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition-colors duration-500"></div>
+               </div>
 
-        if(gd.frame % 1000 === 0) gd.gameSpeed += 0.2;
-        
-        if(gd.frame % 10 === 0) {
-            setScore(score.current + 1);
-        }
+               {/* 2. The Scene (Overlay) */}
+               <div className="relative z-10 flex flex-col items-center gap-6 mt-20">
+                   {/* Title */}
+                   <div className="text-center space-y-2">
+                       <h2 className="text-5xl font-black text-white italic tracking-tighter drop-shadow-[0_5px_5px_rgba(0,0,0,0.8)] stroke-black">
+                           ESCAPE <span className="text-red-500">ROAD</span>
+                       </h2>
+                       <div className="flex items-center justify-center gap-2 text-yellow-400 font-bold tracking-widest text-xs uppercase bg-black/50 px-3 py-1 rounded-full backdrop-blur-sm border border-white/10">
+                           <Siren size={14} className="text-red-500 animate-bounce" />
+                           Wanted Level: ⭐⭐⭐⭐⭐
+                           <Siren size={14} className="text-blue-500 animate-bounce" />
+                       </div>
+                   </div>
 
-        // Clouds
-        ctx.fillStyle = "rgba(255,255,255, 0.6)";
-        if(Math.random() < 0.005) spawnCloud(logicalWidth, logicalHeight);
-        
-        for(let i = gd.clouds.length - 1; i >= 0; i--) {
-            let c = gd.clouds[i];
-            c.x -= c.speed;
-            ctx.beginPath();
-            ctx.arc(c.x, c.y, 20, 0, Math.PI * 2);
-            ctx.arc(c.x + 15, c.y - 10, 25, 0, Math.PI * 2);
-            ctx.arc(c.x + 35, c.y, 20, 0, Math.PI * 2);
-            ctx.fill();
-            
-            if(c.x + c.width < 0) gd.clouds.splice(i, 1);
-        }
-
-        // Physics
-        gd.dino.dy += gd.gravity;
-        gd.dino.y += gd.dino.dy;
-
-        if (gd.dino.y + gd.dino.height > logicalHeight - gd.groundHeight) {
-            gd.dino.y = logicalHeight - gd.groundHeight - gd.dino.height;
-            gd.dino.dy = 0;
-            gd.dino.jumpCount = 0;
-            gd.dino.rotation = 0; 
-        } else {
-            if(gd.dino.rotation < 0) gd.dino.rotation += 0.5;
-        }
-
-        // Draw Dino
-        ctx.save();
-        ctx.translate(gd.dino.x + gd.dino.width/2, gd.dino.y + gd.dino.height/2);
-        ctx.rotate(gd.dino.rotation * Math.PI / 180);
-        
-        if (dinoImageRef.current.complete && dinoImageRef.current.naturalWidth !== 0) {
-            ctx.drawImage(dinoImageRef.current, -gd.dino.width/2, -gd.dino.height/2, gd.dino.width, gd.dino.height);
-        } else {
-            ctx.fillStyle = '#1C1C1E';
-            ctx.beginPath();
-            ctx.arc(0, -10, 15, 0, Math.PI*2);
-            ctx.fill();
-            ctx.fillRect(-10, 0, 20, 22);
-        }
-        ctx.restore();
-
-        // Obstacles
-        if (gd.frame % Math.floor(1000/gd.gameSpeed/1.5) === 0 || (Math.random() < 0.005 && gd.frame > 50)) {
-                if(gd.obstacles.length === 0 || logicalWidth - gd.obstacles[gd.obstacles.length-1].x > 150) {
-                    spawnObstacle(logicalWidth, logicalHeight);
-                }
-        }
-
-        for(let i = gd.obstacles.length - 1; i >= 0; i--) {
-            let obs = gd.obstacles[i];
-            obs.x -= gd.gameSpeed;
-
-            const grad = ctx.createLinearGradient(obs.x, obs.y, obs.x, obs.y + obs.height);
-            grad.addColorStop(0, '#FF3B30');
-            grad.addColorStop(1, '#FF9500');
-            ctx.fillStyle = grad;
-            
-            // Rounded Obstacle Draw
-            ctx.beginPath();
-            ctx.moveTo(obs.x, obs.y + 10);
-            ctx.quadraticCurveTo(obs.x, obs.y, obs.x + 10, obs.y);
-            ctx.lineTo(obs.x + obs.width - 10, obs.y);
-            ctx.quadraticCurveTo(obs.x + obs.width, obs.y, obs.x + obs.width, obs.y + 10);
-            ctx.lineTo(obs.x + obs.width, obs.y + obs.height);
-            ctx.lineTo(obs.x, obs.y + obs.height);
-            ctx.closePath();
-            ctx.fill();
-
-            // Collision
-            const padding = 6;
-            if (
-                gd.dino.x + padding < obs.x + obs.width - padding &&
-                gd.dino.x + gd.dino.width - padding > obs.x + padding &&
-                gd.dino.y + padding < obs.y + obs.height &&
-                gd.dino.y + gd.dino.height > obs.y + padding
-            ) {
-                gameOver();
-            }
-
-            if(obs.x + obs.width < 0) {
-                gd.obstacles.splice(i, 1);
-            }
-        }
-
-        // Ground
-        ctx.fillStyle = '#E5E5EA'; 
-        ctx.fillRect(0, logicalHeight - gd.groundHeight, logicalWidth, gd.groundHeight);
-        ctx.beginPath();
-        ctx.moveTo(0, logicalHeight - gd.groundHeight);
-        ctx.lineTo(logicalWidth, logicalHeight - gd.groundHeight);
-        ctx.strokeStyle = '#D1D1D6';
-        ctx.lineWidth = 1;
-        ctx.stroke();
-
-        // Particles
-        for(let i = gd.particles.length - 1; i >= 0; i--) {
-            let p = gd.particles[i];
-            p.x += p.dx;
-            p.y += p.dy;
-            p.life -= 0.05;
-            
-            ctx.fillStyle = p.color;
-            ctx.globalAlpha = p.life > 0 ? p.life : 0;
-            ctx.beginPath();
-            ctx.arc(p.x, p.y, p.radius, 0, Math.PI*2);
-            ctx.fill();
-            ctx.globalAlpha = 1.0;
-
-            if(p.life <= 0) gd.particles.splice(i, 1);
-        }
-
-        requestRef.current = requestAnimationFrame(animate);
-    };
-
-    // Initial render effect
-    useEffect(() => {
-        const resizeCanvas = () => {
-            if(containerRef.current && canvasRef.current) {
-                const canvas = canvasRef.current;
-                const rect = containerRef.current.getBoundingClientRect();
-                const dpr = window.devicePixelRatio || 1;
-
-                // Set physical pixels
-                canvas.width = rect.width * dpr;
-                canvas.height = rect.height * dpr;
-
-                // Scale context to match logical pixels
-                const ctx = canvas.getContext('2d');
-                ctx.scale(dpr, dpr);
-
-                // CSS style size
-                canvas.style.width = `${rect.width}px`;
-                canvas.style.height = `${rect.height}px`;
-
-                // Redraw initial state if not playing
-                if (!gameData.current.isPlaying) {
-                      const gd = gameData.current;
-                      // Use logical dimensions for drawing
-                      ctx.clearRect(0, 0, rect.width, rect.height);
-                      ctx.fillStyle = '#E5E5EA';
-                      ctx.fillRect(0, rect.height - gd.groundHeight, rect.width, gd.groundHeight);
-                }
-            }
-        };
-        
-        // Wait for container to settle
-        setTimeout(resizeCanvas, 100);
-        window.addEventListener('resize', resizeCanvas);
-
-        // FIX: Removed the native listeners that were capturing ALL events aggressively
-        // and causing the swipe-prevention issue.
-        const handleKeyDown = (e) => {
-            if (e.code === 'Space' || e.code === 'ArrowUp') { 
-                e.preventDefault(); 
-                jump(); 
-            }
-        };
-        window.addEventListener('keydown', handleKeyDown);
-
-        return () => {
-            window.removeEventListener('resize', resizeCanvas);
-            window.removeEventListener('keydown', handleKeyDown);
-            cancelAnimationFrame(requestRef.current);
-        };
-    }, [jump]);
-
-    return (
-        <div ref={containerRef} className="relative w-full h-[calc(100%-6rem)] sm:h-full bg-gradient-to-b from-blue-50/50 to-white overflow-hidden shadow-inner rounded-b-3xl sm:rounded-none">
-            {/* Dynamic Island Score */}
-            <div className="absolute top-4 left-1/2 -translate-x-1/2 z-30 bg-black text-white h-[36px] rounded-full flex items-center justify-between px-1 transition-all duration-300 min-w-[140px] shadow-lg">
-                <div className="flex items-center gap-4 px-4 w-full justify-center">
-                    <div className="flex flex-col items-center leading-none">
-                        <span className="text-[8px] text-gray-400 uppercase tracking-wider font-bold">Score</span>
-                        <span className="font-mono text-sm font-bold tracking-widest text-white">{score.current.toString().padStart(4, '0')}</span>
-                    </div>
-                    <div className="w-[1px] h-4 bg-gray-700"></div>
-                    <div className="flex flex-col items-center leading-none">
-                        <span className="text-[8px] text-gray-400 uppercase tracking-wider font-bold">Best</span>
-                        <span className="font-mono text-sm font-bold tracking-widest text-yellow-400">{highScore.toString().padStart(4, '0')}</span>
-                    </div>
-                </div>
-            </div>
-
-            {/* FIX: Use React props instead of native listeners to allow event bubbling for swipes */}
-            <canvas 
-                ref={canvasRef} 
-                className="block w-full h-full"
-                onTouchStart={handleGameTouchStart}
-                onTouchEnd={handleGameTouchEnd}
-                onMouseDown={jump} // For desktop click support
-            />
-
-            {/* UI Overlay */}
-            {(gameState === 'start' || gameState === 'gameover') && (
-                <div className="absolute inset-0 z-40 flex flex-col items-center justify-center bg-white/75 backdrop-blur-sm transition-all duration-300">
-                    <div className="w-24 h-24 bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 rounded-[24px] shadow-2xl flex items-center justify-center mb-6 ring-4 ring-white shadow-purple-500/30 transform hover:scale-105 transition-transform duration-300 relative overflow-hidden">
-                        <div className="absolute top-0 left-0 w-full h-1/2 bg-gradient-to-b from-white/20 to-transparent pointer-events-none"></div>
-                        <Gamepad2 className="text-white w-12 h-12 drop-shadow-md" />
-                    </div>
-                    
-                    <h1 className="text-3xl font-bold text-gray-900 tracking-tight mb-2">
-                        {gameState === 'start' ? 'Dino Invers' : 'Game Over'}
-                    </h1>
-                    <p className="text-gray-500 text-sm font-medium mb-8 text-center max-w-[200px]">
-                        {gameState === 'start' ? 'Tap anywhere to jump & avoid obstacles' : `Final Score: ${score.current}`}
-                    </p>
-
-                    <button 
-                        onClick={(e) => { e.stopPropagation(); startGame(); }}
-                        className="group relative bg-black text-white w-48 h-12 rounded-full font-semibold text-base shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-2 overflow-hidden active:scale-95"
-                    >
-                        <span className="relative z-10">{gameState === 'start' ? 'Start Game' : 'Try Again'}</span>
-                        <ChevronRight className="w-4 h-4 relative z-10" />
-                        <div className="absolute inset-0 bg-gray-800 transform scale-x-0 group-hover:scale-x-100 transition-transform origin-left duration-300"></div>
-                    </button>
-                </div>
-            )}
-        </div>
-    );
+                   {/* Play Button */}
+                   <motion.button
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        className="mt-12 px-8 py-3 bg-gradient-to-r from-red-600 to-orange-600 text-white font-black text-xl italic rounded-full shadow-[0_0_20px_rgba(239,68,68,0.6)] flex items-center gap-2 border-2 border-white/20 group-hover:shadow-[0_0_40px_rgba(239,68,68,0.8)] transition-all"
+                   >
+                        <Play size={24} fill="currentColor" />
+                        PLAY NOW
+                   </motion.button>
+               </div>
+           </div>
+       ) : (
+           <>
+               {loading && (
+                 <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-0">
+                    <div className="w-10 h-10 border-4 border-gray-600 border-t-white rounded-full animate-spin"></div>
+                 </div>
+               )}
+               <iframe 
+                   ref={iframeRef}
+                   src="https://raw.githack.com/abisdbest/classroom.google.com/85146ac051b67a3c32ebdf898bb0144d818d580b/drive.google.com/escape%20road/index.html"
+                   className="block border-none"
+                   onLoad={() => {
+                       setLoading(false);
+                       handleFocus();
+                   }}
+                   allowFullScreen
+                   scrolling="no"
+               />
+               
+           </>
+       )}
+    </div>
+  );
 };
 
 // --- Splash Screen Component ---
@@ -1948,11 +1660,18 @@ export default function App() {
            {view === 'planner' && renderPlanner()}
            {view === 'storage' && renderStorage()}
            {view === 'settings' && renderSettings()}
-           {view === 'game' && <DinoGame />}
+           
+           {/* Game View - Persisted State */}
+           {/* Using CSS visibility instead of conditional rendering to keep the iframe alive */}
+           <div className={cn("flex-col items-center justify-center h-full pb-32", view === 'game' ? "flex" : "hidden")}>
+               <div className="relative w-full h-full max-w-[501px] shadow-2xl rounded-[32px] overflow-hidden border-4 border-gray-200 dark:border-gray-700 bg-black">
+                 <EscapeRoadGame />
+               </div>
+           </div>
         </div>
 
         {/* Bottom Navigation Dock - Fixed on mobile, contained on desktop */}
-        <div className="absolute bottom-0 left-0 right-0 sm:static p-4 z-50">
+        <div className="absolute bottom-0 left-0 right-0 sm:static p-4 z-50 bg-gradient-to-t from-gray-50 via-gray-50/95 to-transparent dark:from-gray-900 dark:via-gray-900/95 sm:from-transparent sm:via-transparent sm:to-transparent transition-all duration-300">
           <div className="bg-white/90 dark:bg-gray-900/90 backdrop-blur-xl border border-gray-200/50 dark:border-gray-700/50 rounded-2xl p-1.5 flex justify-between items-center shadow-lg shadow-gray-200/50 dark:shadow-black/50">
             <IconButton 
               key="dashboard"
