@@ -735,7 +735,7 @@ const EscapeRoadGame = () => {
                        </h2>
                        <div className="flex items-center justify-center gap-2 text-yellow-400 font-bold tracking-widest text-xs uppercase bg-black/50 px-3 py-1 rounded-full backdrop-blur-sm border border-white/10">
                            <Siren size={14} className="text-red-500 animate-bounce" />
-                           Wanted Level: ⭐⭐⭐⭐⭐
+                           Wanted Level: ✯✯✯✯✯
                            <Siren size={14} className="text-blue-500 animate-bounce" />
                        </div>
                    </div>
