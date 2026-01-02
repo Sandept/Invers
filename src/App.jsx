@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo, forwardRef, useRef, useCallback, useImperativeHandle } from 'react';
-import { motion, useAnimation, AnimatePresence, Variants } from 'framer-motion';
+import { motion, useAnimation, AnimatePresence } from 'framer-motion';
 import { 
+  Settings, 
   CheckCircle2, 
   Moon, 
   Sun, 
@@ -15,22 +16,24 @@ import {
   FileText,
   Camera,
   User,
+  LineChart,
   Database,
   Trash2,
   Lock,
+  Unlock,
   Bell,
   Clock,
+  Gamepad2,
   Play,
-  Siren,
-  AlertTriangle,
-  Smartphone
+  Car,
+  Siren
 } from 'lucide-react';
 
 // --- Utility Functions ---
 
-const cn = (...classes: (string | undefined | null | false)[]) => classes.filter(Boolean).join(' ');
+const cn = (...classes) => classes.filter(Boolean).join(' ');
 
-const formatCurrency = (value: number) => {
+const formatCurrency = (value) => {
   return new Intl.NumberFormat('en-IN', {
     style: 'currency',
     currency: 'INR',
@@ -44,24 +47,10 @@ const MONTHS = [
   "July", "August", "September", "October", "November", "December"
 ];
 
-const DAYS_IN_MONTH = (monthIndex: number, year = 2026) => new Date(year, monthIndex + 1, 0).getDate();
+const DAYS_IN_MONTH = (monthIndex, year = 2026) => new Date(year, monthIndex + 1, 0).getDate();
 
 // --- Theme Configurations ---
-interface ThemeConfig {
-  name: string;
-  primary: string;
-  text: string;
-  textDark: string;
-  lightBg: string;
-  border: string;
-  shadow: string;
-  infoBg: string;
-  infoText: string;
-  blob: string;
-  dot: string;
-}
-
-const THEMES: Record<string, ThemeConfig> = {
+const THEMES = {
   green: {
     name: 'Emerald',
     primary: 'bg-emerald-500',
@@ -92,24 +81,13 @@ const THEMES: Record<string, ThemeConfig> = {
 
 // --- Animated Icon Components ---
 
-interface AnimatedIconProps extends React.ComponentProps<'div'> {
-  size?: number;
-  onMouseEnter?: (e: React.MouseEvent) => void;
-  onMouseLeave?: (e: React.MouseEvent) => void;
-}
-
-interface AnimatedIconHandle {
-  startAnimation: () => void;
-  stopAnimation: () => void;
-}
-
 // 1. ChartColumnIncreasingIcon
-const LINE_VARIANTS: Variants = {
+const LINE_VARIANTS = {
   visible: { pathLength: 1, opacity: 1 },
   hidden: { pathLength: 0, opacity: 0 },
 };
 
-const ChartColumnIncreasingIcon = forwardRef<AnimatedIconHandle, AnimatedIconProps>(
+const ChartColumnIncreasingIcon = forwardRef(
   ({ onMouseEnter, onMouseLeave, className, size = 28, ...props }, ref) => {
     const controls = useAnimation();
     const isControlledRef = useRef(false);
@@ -134,7 +112,7 @@ const ChartColumnIncreasingIcon = forwardRef<AnimatedIconHandle, AnimatedIconPro
     });
 
     const handleMouseEnter = useCallback(
-      async (e: React.MouseEvent) => {
+      async (e) => {
         if (!isControlledRef.current) {
           await controls.start((i) => ({
             pathLength: 0,
@@ -154,7 +132,7 @@ const ChartColumnIncreasingIcon = forwardRef<AnimatedIconHandle, AnimatedIconPro
     );
 
     const handleMouseLeave = useCallback(
-      (e: React.MouseEvent) => {
+      (e) => {
         if (!isControlledRef.current) {
           controls.start('visible');
         } else {
@@ -212,7 +190,7 @@ const ChartColumnIncreasingIcon = forwardRef<AnimatedIconHandle, AnimatedIconPro
 ChartColumnIncreasingIcon.displayName = 'ChartColumnIncreasingIcon';
 
 // 2. CalendarCheckIcon
-const CHECK_VARIANTS: Variants = {
+const CHECK_VARIANTS = {
   normal: {
     pathLength: 1,
     opacity: 1,
@@ -230,7 +208,7 @@ const CHECK_VARIANTS: Variants = {
   },
 };
 
-const CalendarCheckIcon = forwardRef<AnimatedIconHandle, AnimatedIconProps>(
+const CalendarCheckIcon = forwardRef(
   ({ onMouseEnter, onMouseLeave, className, size = 28, ...props }, ref) => {
     const controls = useAnimation();
     const isControlledRef = useRef(false);
@@ -244,7 +222,7 @@ const CalendarCheckIcon = forwardRef<AnimatedIconHandle, AnimatedIconProps>(
     });
 
     const handleMouseEnter = useCallback(
-      (e: React.MouseEvent) => {
+      (e) => {
         if (!isControlledRef.current) {
           controls.start('animate');
         } else {
@@ -255,7 +233,7 @@ const CalendarCheckIcon = forwardRef<AnimatedIconHandle, AnimatedIconProps>(
     );
 
     const handleMouseLeave = useCallback(
-      (e: React.MouseEvent) => {
+      (e) => {
         if (!isControlledRef.current) {
           controls.start('normal');
         } else {
@@ -302,7 +280,7 @@ const CalendarCheckIcon = forwardRef<AnimatedIconHandle, AnimatedIconProps>(
 CalendarCheckIcon.displayName = 'CalendarCheckIcon';
 
 // 3. CogIcon
-const CogIcon = forwardRef<AnimatedIconHandle, AnimatedIconProps>(
+const CogIcon = forwardRef(
   ({ onMouseEnter, onMouseLeave, className, size = 28, ...props }, ref) => {
     const controls = useAnimation();
     const isControlledRef = useRef(false);
@@ -316,7 +294,7 @@ const CogIcon = forwardRef<AnimatedIconHandle, AnimatedIconProps>(
     });
 
     const handleMouseEnter = useCallback(
-      (e: React.MouseEvent) => {
+      (e) => {
         if (!isControlledRef.current) {
           controls.start('animate');
         } else {
@@ -327,7 +305,7 @@ const CogIcon = forwardRef<AnimatedIconHandle, AnimatedIconProps>(
     );
 
     const handleMouseLeave = useCallback(
-      (e: React.MouseEvent) => {
+      (e) => {
         if (!isControlledRef.current) {
           controls.start('normal');
         } else {
@@ -387,12 +365,12 @@ const CogIcon = forwardRef<AnimatedIconHandle, AnimatedIconProps>(
 CogIcon.displayName = 'CogIcon';
 
 // 4. DatabaseIcon
-const DATABASE_VARIANTS: Variants = {
+const DATABASE_VARIANTS = {
     normal: { pathLength: 1, opacity: 1 },
     hidden: { pathLength: 0, opacity: 0 }
 };
   
-const DatabaseIcon = forwardRef<AnimatedIconHandle, AnimatedIconProps>(
+const DatabaseIcon = forwardRef(
 ({ onMouseEnter, onMouseLeave, className, size = 28, ...props }, ref) => {
     const controls = useAnimation();
     const isControlledRef = useRef(false);
@@ -413,7 +391,7 @@ const DatabaseIcon = forwardRef<AnimatedIconHandle, AnimatedIconProps>(
     });
 
     const handleMouseEnter = useCallback(
-    async (e: React.MouseEvent) => {
+    async (e) => {
         if (!isControlledRef.current) {
             await controls.start("hidden");
             await controls.start((i) => ({
@@ -429,7 +407,7 @@ const DatabaseIcon = forwardRef<AnimatedIconHandle, AnimatedIconProps>(
     );
 
     const handleMouseLeave = useCallback(
-    (e: React.MouseEvent) => {
+    (e) => {
         if (!isControlledRef.current) {
             controls.start('normal');
         } else {
@@ -486,12 +464,12 @@ const DatabaseIcon = forwardRef<AnimatedIconHandle, AnimatedIconProps>(
 DatabaseIcon.displayName = 'DatabaseIcon';
 
 // 5. GamepadIcon
-const GAMEPAD_VARIANTS: Variants = {
+const GAMEPAD_VARIANTS = {
   normal: { pathLength: 1, opacity: 1 },
   hidden: { pathLength: 0, opacity: 0 }
 };
 
-const GamepadIcon = forwardRef<AnimatedIconHandle, AnimatedIconProps>(
+const GamepadIcon = forwardRef(
   ({ onMouseEnter, onMouseLeave, className, size = 28, ...props }, ref) => {
     const controls = useAnimation();
     const isControlledRef = useRef(false);
@@ -512,7 +490,7 @@ const GamepadIcon = forwardRef<AnimatedIconHandle, AnimatedIconProps>(
     });
 
     const handleMouseEnter = useCallback(
-      async (e: React.MouseEvent) => {
+      async (e) => {
         if (!isControlledRef.current) {
           await controls.start("hidden");
           await controls.start((i) => ({
@@ -528,7 +506,7 @@ const GamepadIcon = forwardRef<AnimatedIconHandle, AnimatedIconProps>(
     );
 
     const handleMouseLeave = useCallback(
-      (e: React.MouseEvent) => {
+      (e) => {
         if (!isControlledRef.current) {
           controls.start("normal");
         } else {
@@ -600,14 +578,14 @@ GamepadIcon.displayName = 'GamepadIcon';
 
 // --- Layout Components ---
 
-const Card: React.FC<{ children?: React.ReactNode; className?: string }> = ({ children, className = "" }) => (
+const Card = ({ children, className = "" }) => (
   <div className={`bg-white/90 dark:bg-gray-800/90 backdrop-blur-xl border border-white/20 dark:border-white/10 shadow-lg rounded-2xl p-5 ${className} transition-all duration-300 text-gray-900 dark:text-white`}>
     {children}
   </div>
 );
 
-const ThemeSwitch = ({ checked, onChange }: { checked: boolean; onChange: () => void }) => (
-    <label className="theme-switch" style={{ '--toggle-size': '12px' } as React.CSSProperties}>
+const ThemeSwitch = ({ checked, onChange }) => (
+    <label className="theme-switch" style={{ '--toggle-size': '12px' }}>
       <input 
         type="checkbox" 
         className="theme-switch__checkbox" 
@@ -637,7 +615,7 @@ const ThemeSwitch = ({ checked, onChange }: { checked: boolean; onChange: () => 
     </label>
 );
 
-const NotificationSwitch = ({ checked, onChange }: { checked: boolean; onChange: () => void }) => (
+const NotificationSwitch = ({ checked, onChange }) => (
     <label className="switch" style={{ fontSize: '12px' }}>
       <input 
         type="checkbox" 
@@ -652,14 +630,7 @@ const NotificationSwitch = ({ checked, onChange }: { checked: boolean; onChange:
     </label>
 );
 
-interface IconButtonProps {
-  Icon: React.ForwardRefExoticComponent<AnimatedIconProps & React.RefAttributes<AnimatedIconHandle>>;
-  active: boolean;
-  onClick: () => void;
-  theme: ThemeConfig;
-}
-
-const IconButton: React.FC<IconButtonProps> = ({ Icon, active, onClick, theme }) => (
+const IconButton = ({ Icon, active, onClick, theme }) => (
   <button 
     onClick={onClick}
     className={`flex-1 p-2 rounded-xl transition-all duration-200 group flex flex-col items-center justify-center gap-1 focus:outline-none ${active ? `${theme.lightBg} ${theme.text}` : 'text-gray-400 md:hover:bg-gray-100 dark:md:hover:bg-white/5 active:bg-gray-100 dark:active:bg-gray-800'}`}
@@ -671,8 +642,8 @@ const IconButton: React.FC<IconButtonProps> = ({ Icon, active, onClick, theme })
 
 // --- Escape Road Game Component ---
 const EscapeRoadGame = () => {
-  const iframeRef = useRef<HTMLIFrameElement>(null);
-  const containerRef = useRef<HTMLDivElement>(null);
+  const iframeRef = useRef(null);
+  const containerRef = useRef(null);
   const [loading, setLoading] = useState(true);
   const [isPlaying, setIsPlaying] = useState(false);
 
@@ -702,7 +673,7 @@ const EscapeRoadGame = () => {
   }, [isPlaying]);
 
   const handleFocus = () => {
-      if (iframeRef.current && iframeRef.current.contentWindow) {
+      if (iframeRef.current) {
           iframeRef.current.contentWindow.focus();
       }
   };
@@ -717,7 +688,7 @@ const EscapeRoadGame = () => {
                     alt="Escape Road Thumbnail" 
                     className="w-full h-full object-cover opacity-60 group-hover:opacity-100 transition-opacity duration-700 hover:scale-105 transform"
                     onError={(e) => {
-                      (e.target as HTMLImageElement).style.display = 'none'; 
+                      e.target.style.display = 'none'; 
                     }}
                   />
                   <div className="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition-colors duration-500"></div>
@@ -772,7 +743,7 @@ const EscapeRoadGame = () => {
 
 // --- Splash Screen Component ---
 const SplashScreen = () => {
-    const iconRef = useRef<AnimatedIconHandle>(null);
+    const iconRef = useRef(null);
 
     useEffect(() => {
         const timer = setTimeout(() => {
@@ -866,18 +837,6 @@ const SplashScreen = () => {
 
 const VIEWS = ['dashboard', 'planner', 'storage', 'game', 'settings'];
 
-interface MonthData {
-    profit?: string;
-    loss?: string;
-    note?: string;
-    isSaved?: boolean;
-}
-
-interface Profile {
-    name: string;
-    image: string | null;
-}
-
 export default function App() {
   // --- State ---
   const [view, setView] = useState('dashboard');
@@ -885,9 +844,9 @@ export default function App() {
   const [showSplash, setShowSplash] = useState(true); 
   const [colorTheme, setColorTheme] = useState('green');
   const [prices, setPrices] = useState({ btc: 8500000, gold: 7200 });
-  const [investments, setInvestments] = useState<Record<string, boolean>>({}); 
-  const [monthlyData, setMonthlyData] = useState<Record<number, MonthData>>({}); 
-  const [profile, setProfile] = useState<Profile>({ name: 'San • dept', image: null });
+  const [investments, setInvestments] = useState({}); 
+  const [monthlyData, setMonthlyData] = useState({}); 
+  const [profile, setProfile] = useState({ name: 'San • dept', image: null });
   const [selectedMonth, setSelectedMonth] = useState(0); 
   const [saveStatus, setSaveStatus] = useState('');
   
@@ -895,89 +854,31 @@ export default function App() {
   const [notificationsEnabled, setNotificationsEnabled] = useState(false);
   const [notificationTime, setNotificationTime] = useState('09:00');
   const [notificationStatus, setNotificationStatus] = useState(''); 
-  const lastNotificationDate = useRef<string | null>(null);
-  
+  const lastNotificationDate = useRef(null);
   // Audio Ref
-  const audioRef = useRef<HTMLAudioElement | null>(null);
-
-  // Platform Detection
-  const isIOS = useMemo(() => {
-     return /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream;
-  }, []);
-  const [isStandalone, setIsStandalone] = useState(false);
-
-  useEffect(() => {
-     const checkStandalone = () => {
-         setIsStandalone(window.matchMedia('(display-mode: standalone)').matches || (window.navigator as any).standalone === true);
-     };
-     checkStandalone();
-     window.addEventListener('resize', checkStandalone);
-     return () => window.removeEventListener('resize', checkStandalone);
-  }, []);
+  const audioRef = useRef(null);
 
   // Initialize Audio
   useEffect(() => {
       audioRef.current = new Audio("https://assets.mixkit.co/sfx/preview/mixkit-software-interface-start-2574.mp3");
-      audioRef.current.load(); // Preload
   }, []);
 
-  // Wake Lock Ref
-  const wakeLockRef = useRef<any>(null);
-
-  const requestWakeLock = async () => {
-    if ('wakeLock' in navigator) {
-        try {
-            wakeLockRef.current = await (navigator as any).wakeLock.request('screen');
-            console.log('Wake Lock active');
-        } catch (err: any) {
-            console.log(`Wake Lock Error: ${err.name}, ${err.message}`);
-        }
-    }
-  };
-
-  const releaseWakeLock = async () => {
-      if (wakeLockRef.current) {
-          try {
-             await wakeLockRef.current.release();
-             wakeLockRef.current = null;
-             console.log('Wake Lock released');
-          } catch(e) {
-              console.log("Error releasing wake lock", e);
-          }
-      }
-  }
-
-  // Handle Visibility Change for Wake Lock
-  useEffect(() => {
-      const handleVisibilityChange = async () => {
-          if (notificationsEnabled && document.visibilityState === 'visible' && !wakeLockRef.current) {
-              await requestWakeLock();
-          }
-      };
-      document.addEventListener('visibilitychange', handleVisibilityChange);
-      return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
-  }, [notificationsEnabled]);
-
-
   // Function to unlock audio on first interaction
-  const unlockAudio = useCallback(() => {
+  const unlockAudio = () => {
       const audio = audioRef.current;
       if (audio) {
           audio.volume = 0;
-          const playPromise = audio.play();
-          if (playPromise !== undefined) {
-              playPromise.then(() => {
-                  audio.pause();
-                  audio.currentTime = 0;
-                  audio.volume = 0.5; // Reset volume for actual alerts
-              }).catch(e => console.log("Audio unlock failed (user gesture required)", e));
-          }
+          audio.play().then(() => {
+              audio.pause();
+              audio.currentTime = 0;
+              audio.volume = 0.5; // Reset volume for actual alerts
+          }).catch(e => console.log("Audio unlock failed (user gesture required)", e));
       }
-  }, []);
+  };
 
   // Swipe Gesture State
-  const [touchStart, setTouchStart] = useState<number | null>(null);
-  const [touchEnd, setTouchEnd] = useState<number | null>(null);
+  const [touchStart, setTouchStart] = useState(null);
+  const [touchEnd, setTouchEnd] = useState(null);
 
   const currentTheme = THEMES[colorTheme] || THEMES.green;
 
@@ -1021,17 +922,6 @@ export default function App() {
     }
   }, [investments, monthlyData, profile, darkMode, colorTheme, notificationsEnabled, notificationTime]);
 
-  // Manage Wake Lock based on notification status
-  useEffect(() => {
-      if (notificationsEnabled) {
-          requestWakeLock();
-      } else {
-          releaseWakeLock();
-      }
-      return () => { releaseWakeLock(); };
-  }, [notificationsEnabled]);
-
-
   useEffect(() => {
     const interval = setInterval(() => {
       setPrices(prev => ({
@@ -1043,30 +933,25 @@ export default function App() {
   }, []);
 
   // Updated Notification Logic
-  const triggerNotification = useCallback((message: string) => {
-    console.log("Triggering notification:", message);
+  const triggerNotification = (message) => {
     
-    // 1. Play Sound (Try-Catch in case of error)
-    const audio = audioRef.current;
-    if (audio) {
-        audio.currentTime = 0;
-        audio.volume = 1.0;
-        const playPromise = audio.play();
-        if (playPromise !== undefined) {
-            playPromise.catch(e => console.log("Audio play blocked", e));
-        }
-    }
-
     // 2. Vibration (Critical for mobile feedback)
     if ("vibrate" in navigator) {
         try {
-            navigator.vibrate([200, 100, 200, 100, 400]);
+            navigator.vibrate([200, 100, 200]);
         } catch(e) {
             console.log("Vibration not supported");
         }
     }
     
-    // 3. Try Native Notification
+    // 3. Play Sound
+    const audio = audioRef.current;
+    if (audio) {
+        audio.currentTime = 0;
+        audio.play().catch(e => console.log("Audio play blocked", e));
+    }
+
+    // 4. Try Native Notification
     if (Notification.permission === "granted") {
       try {
         const notif = new Notification("Invers Wealth", {
@@ -1077,17 +962,17 @@ export default function App() {
           tag: 'invers-reminder',
           renotify: true,
           requireInteraction: true 
-        } as any);
+        });
         
         notif.onclick = function() {
             window.focus();
             this.close();
         };
       } catch (e) {
-        console.log("Native notification failed", e);
+        console.log("Native notification blocked by environment");
       }
     }
-  }, []);
+  };
 
   useEffect(() => {
     if (!notificationsEnabled) return;
@@ -1097,17 +982,16 @@ export default function App() {
         const currentTimeString = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
         const todayDateString = now.toDateString();
 
-        // Check if time matches and we haven't notified today
         if (currentTimeString === notificationTime && lastNotificationDate.current !== todayDateString) {
             triggerNotification("Time to track your daily investments! 🚀");
             lastNotificationDate.current = todayDateString;
         }
     };
 
-    // Check every 1 second to ensure we don't miss the minute window on slower devices
-    const interval = setInterval(checkTime, 1000);
+    // Check more frequently (every 5 seconds) to ensure we catch the minute change
+    const interval = setInterval(checkTime, 5000);
     return () => clearInterval(interval);
-  }, [notificationsEnabled, notificationTime, triggerNotification]);
+  }, [notificationsEnabled, notificationTime]);
 
   useEffect(() => {
     if (saveStatus) {
@@ -1146,7 +1030,7 @@ export default function App() {
 
   // --- Actions ---
 
-  const toggleDay = (dayIndex: number) => {
+  const toggleDay = (dayIndex) => {
     const key = `${selectedMonth}-${dayIndex}`;
     setInvestments(prev => ({
       ...prev,
@@ -1154,7 +1038,7 @@ export default function App() {
     }));
   };
 
-  const updateMonthData = (field: keyof MonthData, value: string) => {
+  const updateMonthData = (field, value) => {
     setMonthlyData(prev => ({
       ...prev,
       [selectedMonth]: {
@@ -1175,8 +1059,8 @@ export default function App() {
     setSaveStatus('saved');
   };
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
+  const handleImageUpload = (e) => {
+    const file = e.target.files[0];
     if (file) {
       if (file.size > 500000) {
         console.warn("Image is too large. Please select an image under 500KB.");
@@ -1184,58 +1068,31 @@ export default function App() {
       }
       const reader = new FileReader();
       reader.onloadend = () => {
-        if (typeof reader.result === 'string') {
-            setProfile(prev => ({ ...prev, image: reader.result as string }));
-        }
+        setProfile(prev => ({ ...prev, image: reader.result }));
       };
       reader.readAsDataURL(file);
     }
   };
 
-  const handleSaveNotificationTime = async () => {
-      unlockAudio(); // Important: User interaction here allows audio playback
-      
+  const handleSaveNotificationTime = () => {
       if (!notificationsEnabled) return;
       
-      // Request permission immediately
+      // Request permission
       if (Notification.permission !== "granted" && Notification.permission !== "denied") {
-          await Notification.requestPermission();
+          Notification.requestPermission();
       }
       
       // Reset tracker so user can test the new time immediately if it matches current time
       lastNotificationDate.current = null;
       
       setNotificationStatus('saved');
-      
-      // Request Wake Lock to keep screen alive for reliable notification
-      requestWakeLock();
-  };
-
-  const handleToggleNotification = async () => {
-      unlockAudio(); // User interaction
-      
-      if (!notificationsEnabled) {
-          // Turning ON
-          if (Notification.permission !== "granted") {
-              const permission = await Notification.requestPermission();
-              if (permission !== 'granted') {
-                  alert("Notifications are blocked. Please enable them in browser settings.");
-              }
-          }
-          requestWakeLock();
-      } else {
-          // Turning OFF
-          releaseWakeLock();
-      }
-      setNotificationsEnabled(!notificationsEnabled);
   };
 
   const handleTestNotification = async () => {
-      unlockAudio(); // User interaction
-      
-      if (Notification.permission !== "granted") {
-          const permission = await Notification.requestPermission();
-          if (permission !== 'granted') return;
+      unlockAudio(); // Unlock audio on test click
+      // Always request permission on user interaction if not granted
+      if (Notification.permission !== "granted" && Notification.permission !== "denied") {
+          await Notification.requestPermission();
       }
       
       triggerNotification("This is how your reminder will look! 🔔");
@@ -1244,12 +1101,12 @@ export default function App() {
   // --- Swipe Gesture Handlers ---
   const minSwipeDistance = 50;
 
-  const onTouchStart = (e: React.TouchEvent) => {
+  const onTouchStart = (e) => {
     setTouchEnd(null);
     setTouchStart(e.targetTouches[0].clientX);
   };
 
-  const onTouchMove = (e: React.TouchEvent) => setTouchEnd(e.targetTouches[0].clientX);
+  const onTouchMove = (e) => setTouchEnd(e.targetTouches[0].clientX);
 
   const onTouchEnd = () => {
     if (!touchStart || !touchEnd) return;
@@ -1541,7 +1398,7 @@ export default function App() {
   };
 
   const renderStorage = () => {
-    const savedRecords = (Object.values(monthlyData) as MonthData[]).filter(data => data && data.isSaved);
+    const savedRecords = Object.values(monthlyData).filter(data => data && data.isSaved);
     const totalProfit = savedRecords.reduce((acc, curr) => acc + (Number(curr.profit) || 0), 0);
     const totalLoss = savedRecords.reduce((acc, curr) => acc + (Number(curr.loss) || 0), 0);
     const net = totalProfit - totalLoss;
@@ -1673,35 +1530,15 @@ export default function App() {
                   </div>
                   <NotificationSwitch 
                       checked={notificationsEnabled} 
-                      onChange={handleToggleNotification}
+                      onChange={() => {
+                          unlockAudio(); // Unlock audio context on interaction
+                          if (!notificationsEnabled) {
+                              Notification.requestPermission();
+                          }
+                          setNotificationsEnabled(!notificationsEnabled);
+                      }}
                   />
               </div>
-
-              {/* iOS Warning */}
-              {notificationsEnabled && isIOS && !isStandalone && (
-                  <div className="p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-700/50 rounded-lg flex gap-3">
-                      <div className="shrink-0 text-yellow-600 dark:text-yellow-400 mt-0.5">
-                          <AlertTriangle size={16} />
-                      </div>
-                      <div className="text-xs text-yellow-800 dark:text-yellow-200">
-                          <p className="font-bold mb-1">iOS Notification Limit</p>
-                          <p>To receive notifications on iOS, please <strong>Add to Home Screen</strong> from the Share menu.</p>
-                      </div>
-                  </div>
-              )}
-
-              {/* Mobile Wake Lock Info */}
-              {notificationsEnabled && (
-                  <div className="p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700/50 rounded-lg flex gap-3">
-                      <div className="shrink-0 text-blue-600 dark:text-blue-400 mt-0.5">
-                          <Smartphone size={16} />
-                      </div>
-                      <div className="text-xs text-blue-800 dark:text-blue-200">
-                          <p className="font-bold mb-1">Reliability Tip</p>
-                          <p>Keep the app open or screen active for best results on mobile.</p>
-                      </div>
-                  </div>
-              )}
 
               {notificationsEnabled && (
                 <div className="animate-fade-in bg-gray-50 dark:bg-gray-800 p-3 rounded-xl border border-gray-100 dark:border-gray-700">
@@ -1840,6 +1677,38 @@ export default function App() {
       </div>
 
       <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+        
+        .font-inter {
+            font-family: 'Inter', sans-serif;
+        }
+
+        .touch-pan-y {
+            touch-action: pan-y;
+        }
+
+        .scrollbar-hide::-webkit-scrollbar {
+            display: none;
+        }
+        .scrollbar-hide {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        @keyframes bounce-short {
+          0%, 100% { transform: translateY(0); }
+          50% { transform: translateY(-20%); }
+        }
+        .animate-bounce-short {
+          animation: bounce-short 0.5s ease-in-out;
+        }
+        @keyframes fade-in {
+          from { opacity: 0; transform: translateY(10px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-in {
+          animation: fade-in 0.3s ease-out forwards;
+        }
+
         /* --- Theme Switch CSS (Provided by User) --- */
         .theme-switch {
           --toggle-size: 30px;
@@ -2153,30 +2022,6 @@ export default function App() {
         .switch input:checked + .toggle > .right {
           transform: rotateX(10deg) rotateY(0deg);
           color: #487bdb;
-        }
-
-        /* Custom Utilities */
-        .font-inter {
-            font-family: 'Inter', sans-serif;
-        }
-
-        .touch-pan-y {
-            touch-action: pan-y;
-        }
-
-        @keyframes bounce-short {
-          0%, 100% { transform: translateY(0); }
-          50% { transform: translateY(-20%); }
-        }
-        .animate-bounce-short {
-          animation: bounce-short 0.5s ease-in-out;
-        }
-        @keyframes fade-in {
-          from { opacity: 0; transform: translateY(10px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-        .animate-fade-in {
-          animation: fade-in 0.3s ease-out forwards;
         }
       `}</style>
     </div>
