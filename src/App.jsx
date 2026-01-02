@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useMemo, forwardRef, useRef, useCallback, useImperativeHandle } from 'react';
-import { motion, useAnimation, AnimatePresence } from 'framer-motion';
+import { motion, useAnimation, AnimatePresence, Variants } from 'framer-motion';
 import { 
-  Settings, 
   CheckCircle2, 
   Moon, 
   Sun, 
@@ -16,24 +15,22 @@ import {
   FileText,
   Camera,
   User,
-  LineChart,
   Database,
   Trash2,
   Lock,
-  Unlock,
   Bell,
   Clock,
-  Gamepad2,
   Play,
-  Car,
-  Siren
+  Siren,
+  AlertTriangle,
+  Smartphone
 } from 'lucide-react';
 
 // --- Utility Functions ---
 
-const cn = (...classes) => classes.filter(Boolean).join(' ');
+const cn = (...classes: (string | undefined | null | false)[]) => classes.filter(Boolean).join(' ');
 
-const formatCurrency = (value) => {
+const formatCurrency = (value: number) => {
   return new Intl.NumberFormat('en-IN', {
     style: 'currency',
     currency: 'INR',
@@ -47,10 +44,24 @@ const MONTHS = [
   "July", "August", "September", "October", "November", "December"
 ];
 
-const DAYS_IN_MONTH = (monthIndex, year = 2025) => new Date(year, monthIndex + 1, 0).getDate();
+const DAYS_IN_MONTH = (monthIndex: number, year = 2026) => new Date(year, monthIndex + 1, 0).getDate();
 
 // --- Theme Configurations ---
-const THEMES = {
+interface ThemeConfig {
+  name: string;
+  primary: string;
+  text: string;
+  textDark: string;
+  lightBg: string;
+  border: string;
+  shadow: string;
+  infoBg: string;
+  infoText: string;
+  blob: string;
+  dot: string;
+}
+
+const THEMES: Record<string, ThemeConfig> = {
   green: {
     name: 'Emerald',
     primary: 'bg-emerald-500',
@@ -81,20 +92,30 @@ const THEMES = {
 
 // --- Animated Icon Components ---
 
-// 1. ChartColumnIncreasingIcon (New Brand Logo)
-const LINE_VARIANTS = {
+interface AnimatedIconProps extends React.ComponentProps<'div'> {
+  size?: number;
+  onMouseEnter?: (e: React.MouseEvent) => void;
+  onMouseLeave?: (e: React.MouseEvent) => void;
+}
+
+interface AnimatedIconHandle {
+  startAnimation: () => void;
+  stopAnimation: () => void;
+}
+
+// 1. ChartColumnIncreasingIcon
+const LINE_VARIANTS: Variants = {
   visible: { pathLength: 1, opacity: 1 },
   hidden: { pathLength: 0, opacity: 0 },
 };
 
-const ChartColumnIncreasingIcon = forwardRef(
+const ChartColumnIncreasingIcon = forwardRef<AnimatedIconHandle, AnimatedIconProps>(
   ({ onMouseEnter, onMouseLeave, className, size = 28, ...props }, ref) => {
     const controls = useAnimation();
     const isControlledRef = useRef(false);
 
     useImperativeHandle(ref, () => {
       isControlledRef.current = true;
-
       return {
         startAnimation: async () => {
           await controls.start((i) => ({
@@ -113,7 +134,7 @@ const ChartColumnIncreasingIcon = forwardRef(
     });
 
     const handleMouseEnter = useCallback(
-      async (e) => {
+      async (e: React.MouseEvent) => {
         if (!isControlledRef.current) {
           await controls.start((i) => ({
             pathLength: 0,
@@ -133,7 +154,7 @@ const ChartColumnIncreasingIcon = forwardRef(
     );
 
     const handleMouseLeave = useCallback(
-      (e) => {
+      (e: React.MouseEvent) => {
         if (!isControlledRef.current) {
           controls.start('visible');
         } else {
@@ -190,9 +211,8 @@ const ChartColumnIncreasingIcon = forwardRef(
 );
 ChartColumnIncreasingIcon.displayName = 'ChartColumnIncreasingIcon';
 
-
 // 2. CalendarCheckIcon
-const CHECK_VARIANTS = {
+const CHECK_VARIANTS: Variants = {
   normal: {
     pathLength: 1,
     opacity: 1,
@@ -210,7 +230,7 @@ const CHECK_VARIANTS = {
   },
 };
 
-const CalendarCheckIcon = forwardRef(
+const CalendarCheckIcon = forwardRef<AnimatedIconHandle, AnimatedIconProps>(
   ({ onMouseEnter, onMouseLeave, className, size = 28, ...props }, ref) => {
     const controls = useAnimation();
     const isControlledRef = useRef(false);
@@ -224,7 +244,7 @@ const CalendarCheckIcon = forwardRef(
     });
 
     const handleMouseEnter = useCallback(
-      (e) => {
+      (e: React.MouseEvent) => {
         if (!isControlledRef.current) {
           controls.start('animate');
         } else {
@@ -235,7 +255,7 @@ const CalendarCheckIcon = forwardRef(
     );
 
     const handleMouseLeave = useCallback(
-      (e) => {
+      (e: React.MouseEvent) => {
         if (!isControlledRef.current) {
           controls.start('normal');
         } else {
@@ -282,7 +302,7 @@ const CalendarCheckIcon = forwardRef(
 CalendarCheckIcon.displayName = 'CalendarCheckIcon';
 
 // 3. CogIcon
-const CogIcon = forwardRef(
+const CogIcon = forwardRef<AnimatedIconHandle, AnimatedIconProps>(
   ({ onMouseEnter, onMouseLeave, className, size = 28, ...props }, ref) => {
     const controls = useAnimation();
     const isControlledRef = useRef(false);
@@ -296,7 +316,7 @@ const CogIcon = forwardRef(
     });
 
     const handleMouseEnter = useCallback(
-      (e) => {
+      (e: React.MouseEvent) => {
         if (!isControlledRef.current) {
           controls.start('animate');
         } else {
@@ -307,7 +327,7 @@ const CogIcon = forwardRef(
     );
 
     const handleMouseLeave = useCallback(
-      (e) => {
+      (e: React.MouseEvent) => {
         if (!isControlledRef.current) {
           controls.start('normal');
         } else {
@@ -366,13 +386,13 @@ const CogIcon = forwardRef(
 );
 CogIcon.displayName = 'CogIcon';
 
-// 4. DatabaseIcon (New Animated Icon for Storage)
-const DATABASE_VARIANTS = {
+// 4. DatabaseIcon
+const DATABASE_VARIANTS: Variants = {
     normal: { pathLength: 1, opacity: 1 },
     hidden: { pathLength: 0, opacity: 0 }
 };
   
-const DatabaseIcon = forwardRef(
+const DatabaseIcon = forwardRef<AnimatedIconHandle, AnimatedIconProps>(
 ({ onMouseEnter, onMouseLeave, className, size = 28, ...props }, ref) => {
     const controls = useAnimation();
     const isControlledRef = useRef(false);
@@ -393,7 +413,7 @@ const DatabaseIcon = forwardRef(
     });
 
     const handleMouseEnter = useCallback(
-    async (e) => {
+    async (e: React.MouseEvent) => {
         if (!isControlledRef.current) {
             await controls.start("hidden");
             await controls.start((i) => ({
@@ -409,7 +429,7 @@ const DatabaseIcon = forwardRef(
     );
 
     const handleMouseLeave = useCallback(
-    (e) => {
+    (e: React.MouseEvent) => {
         if (!isControlledRef.current) {
             controls.start('normal');
         } else {
@@ -437,7 +457,6 @@ const DatabaseIcon = forwardRef(
             strokeLinecap="round"
             strokeLinejoin="round"
         >
-        {/* Top Ellipse */}
         <motion.ellipse 
             cx="12" cy="5" rx="9" ry="3" 
             variants={DATABASE_VARIANTS}
@@ -445,7 +464,6 @@ const DatabaseIcon = forwardRef(
             animate={controls}
             custom={0}
         />
-        {/* Middle Divider Curve */}
         <motion.path 
             d="M3 12A9 3 0 0 0 21 12" 
             variants={DATABASE_VARIANTS}
@@ -453,7 +471,6 @@ const DatabaseIcon = forwardRef(
             animate={controls}
             custom={1}
         />
-        {/* Main Body */}
         <motion.path 
             d="M3 5V19A9 3 0 0 0 21 19V5" 
             variants={DATABASE_VARIANTS}
@@ -468,13 +485,13 @@ const DatabaseIcon = forwardRef(
 );
 DatabaseIcon.displayName = 'DatabaseIcon';
 
-// 5. GamepadIcon (New Animated Icon for Games)
-const GAMEPAD_VARIANTS = {
+// 5. GamepadIcon
+const GAMEPAD_VARIANTS: Variants = {
   normal: { pathLength: 1, opacity: 1 },
   hidden: { pathLength: 0, opacity: 0 }
 };
 
-const GamepadIcon = forwardRef(
+const GamepadIcon = forwardRef<AnimatedIconHandle, AnimatedIconProps>(
   ({ onMouseEnter, onMouseLeave, className, size = 28, ...props }, ref) => {
     const controls = useAnimation();
     const isControlledRef = useRef(false);
@@ -495,7 +512,7 @@ const GamepadIcon = forwardRef(
     });
 
     const handleMouseEnter = useCallback(
-      async (e) => {
+      async (e: React.MouseEvent) => {
         if (!isControlledRef.current) {
           await controls.start("hidden");
           await controls.start((i) => ({
@@ -511,7 +528,7 @@ const GamepadIcon = forwardRef(
     );
 
     const handleMouseLeave = useCallback(
-      (e) => {
+      (e: React.MouseEvent) => {
         if (!isControlledRef.current) {
           controls.start("normal");
         } else {
@@ -539,7 +556,6 @@ const GamepadIcon = forwardRef(
           strokeLinecap="round"
           strokeLinejoin="round"
         >
-          {/* Body */}
           <motion.rect 
             x="2" y="6" width="20" height="12" rx="2" 
             variants={GAMEPAD_VARIANTS}
@@ -547,7 +563,6 @@ const GamepadIcon = forwardRef(
             animate={controls}
             custom={0}
           />
-          {/* D-Pad */}
           <motion.path 
             d="M6 12h4m-2-2v4" 
             variants={GAMEPAD_VARIANTS}
@@ -555,7 +570,6 @@ const GamepadIcon = forwardRef(
             animate={controls}
             custom={1}
           />
-          {/* Buttons */}
           <motion.path 
             d="M15 11h.01" 
             strokeWidth="3"
@@ -586,24 +600,14 @@ GamepadIcon.displayName = 'GamepadIcon';
 
 // --- Layout Components ---
 
-const Card = ({ children, className = "" }) => (
+const Card: React.FC<{ children?: React.ReactNode; className?: string }> = ({ children, className = "" }) => (
   <div className={`bg-white/90 dark:bg-gray-800/90 backdrop-blur-xl border border-white/20 dark:border-white/10 shadow-lg rounded-2xl p-5 ${className} transition-all duration-300 text-gray-900 dark:text-white`}>
     {children}
   </div>
 );
 
-const Toggle = ({ active, onToggle, themeColor = 'bg-green-500' }) => (
-  <button 
-    onClick={onToggle}
-    className={`w-14 h-8 rounded-full p-1 transition-colors duration-300 ${active ? themeColor : 'bg-gray-300 dark:bg-gray-600'}`}
-  >
-    <div className={`w-6 h-6 bg-white rounded-full shadow-md transform transition-transform duration-300 ${active ? 'translate-x-6' : 'translate-x-0'}`} />
-  </button>
-);
-
-// --- NEW THEME SWITCH COMPONENT ---
-const ThemeSwitch = ({ checked, onChange }) => (
-    <label className="theme-switch" style={{ '--toggle-size': '12px' }}>
+const ThemeSwitch = ({ checked, onChange }: { checked: boolean; onChange: () => void }) => (
+    <label className="theme-switch" style={{ '--toggle-size': '12px' } as React.CSSProperties}>
       <input 
         type="checkbox" 
         className="theme-switch__checkbox" 
@@ -633,8 +637,7 @@ const ThemeSwitch = ({ checked, onChange }) => (
     </label>
 );
 
-// --- NEW NOTIFICATION SWITCH COMPONENT ---
-const NotificationSwitch = ({ checked, onChange }) => (
+const NotificationSwitch = ({ checked, onChange }: { checked: boolean; onChange: () => void }) => (
     <label className="switch" style={{ fontSize: '12px' }}>
       <input 
         type="checkbox" 
@@ -649,11 +652,16 @@ const NotificationSwitch = ({ checked, onChange }) => (
     </label>
 );
 
-const IconButton = ({ Icon, active, onClick, theme }) => (
+interface IconButtonProps {
+  Icon: React.ForwardRefExoticComponent<AnimatedIconProps & React.RefAttributes<AnimatedIconHandle>>;
+  active: boolean;
+  onClick: () => void;
+  theme: ThemeConfig;
+}
+
+const IconButton: React.FC<IconButtonProps> = ({ Icon, active, onClick, theme }) => (
   <button 
     onClick={onClick}
-    // FIX: Removed sticky hover states on mobile by using 'md:hover'. 
-    // Added 'active:bg-gray-100' for immediate touch feedback.
     className={`flex-1 p-2 rounded-xl transition-all duration-200 group flex flex-col items-center justify-center gap-1 focus:outline-none ${active ? `${theme.lightBg} ${theme.text}` : 'text-gray-400 md:hover:bg-gray-100 dark:md:hover:bg-white/5 active:bg-gray-100 dark:active:bg-gray-800'}`}
   >
     <Icon size={24} className={`transition-transform duration-300 ${active ? 'scale-110' : 'group-hover:scale-105'}`} />
@@ -662,14 +670,12 @@ const IconButton = ({ Icon, active, onClick, theme }) => (
 );
 
 // --- Escape Road Game Component ---
-// Incorporates High-DPI scaling and Focus management
 const EscapeRoadGame = () => {
-  const iframeRef = useRef(null);
-  const containerRef = useRef(null);
+  const iframeRef = useRef<HTMLIFrameElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
   const [loading, setLoading] = useState(true);
   const [isPlaying, setIsPlaying] = useState(false);
 
-  // Resize logic
   useEffect(() => {
      if (!isPlaying) return;
 
@@ -680,31 +686,23 @@ const EscapeRoadGame = () => {
         const width = container.clientWidth;
         const height = container.clientHeight;
         
-        // High-DPI Scaling Logic adapted from user provided script
         const dpr = window.devicePixelRatio || 1;
         const scale = Math.min(dpr, 2.5);
         
-        // Apply styles to iframe
         iframeRef.current.style.width = `${width * scale}px`;
         iframeRef.current.style.height = `${height * scale}px`;
         iframeRef.current.style.transform = `scale(${1 / scale})`;
         iframeRef.current.style.transformOrigin = 'top left';
      };
 
-     // Initial resize
-     // Short delay to ensure iframe is rendered in DOM
      setTimeout(resizeGame, 50);
-     
-     // Resize observer is better than window resize for responsive containers
      const observer = new ResizeObserver(resizeGame);
      if (containerRef.current) observer.observe(containerRef.current);
-
      return () => observer.disconnect();
   }, [isPlaying]);
 
-  // Focus logic
   const handleFocus = () => {
-      if (iframeRef.current) {
+      if (iframeRef.current && iframeRef.current.contentWindow) {
           iframeRef.current.contentWindow.focus();
       }
   };
@@ -713,22 +711,19 @@ const EscapeRoadGame = () => {
     <div ref={containerRef} className="w-full h-full relative overflow-hidden bg-[#1a1a1a]" onClick={isPlaying ? handleFocus : undefined}>
        {!isPlaying ? (
            <div className="absolute inset-0 flex flex-col items-center justify-center bg-gray-900 z-20 overflow-hidden group cursor-pointer" onClick={() => setIsPlaying(true)}>
-               {/* 1. Image Background */}
                <div className="absolute inset-0 bg-gray-900">
                   <img 
                     src="https://m.media-amazon.com/images/I/81CaNyaWp2L.png" 
                     alt="Escape Road Thumbnail" 
                     className="w-full h-full object-cover opacity-60 group-hover:opacity-100 transition-opacity duration-700 hover:scale-105 transform"
                     onError={(e) => {
-                      e.target.style.display = 'none'; // Hide if broken
+                      (e.target as HTMLImageElement).style.display = 'none'; 
                     }}
                   />
                   <div className="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition-colors duration-500"></div>
                </div>
 
-               {/* 2. The Scene (Overlay) */}
                <div className="relative z-10 flex flex-col items-center gap-6 mt-20">
-                   {/* Title */}
                    <div className="text-center space-y-2">
                        <h2 className="text-5xl font-black text-white italic tracking-tighter drop-shadow-[0_5px_5px_rgba(0,0,0,0.8)] stroke-black">
                            ESCAPE <span className="text-red-500">ROAD</span>
@@ -740,7 +735,6 @@ const EscapeRoadGame = () => {
                        </div>
                    </div>
 
-                   {/* Play Button */}
                    <motion.button
                         whileHover={{ scale: 1.05 }}
                         whileTap={{ scale: 0.95 }}
@@ -778,10 +772,9 @@ const EscapeRoadGame = () => {
 
 // --- Splash Screen Component ---
 const SplashScreen = () => {
-    const iconRef = useRef(null);
+    const iconRef = useRef<AnimatedIconHandle>(null);
 
     useEffect(() => {
-        // Trigger the specific chart animation on mount
         const timer = setTimeout(() => {
             if (iconRef.current) {
                 iconRef.current.startAnimation();
@@ -798,7 +791,6 @@ const SplashScreen = () => {
         transition={{ duration: 0.8, ease: "easeInOut" }}
         className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-gray-950 text-white overflow-hidden h-[100dvh]"
     >
-        {/* Animated Background Elements - Optimized for Performance */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
             <motion.div 
                 animate={{ 
@@ -822,7 +814,6 @@ const SplashScreen = () => {
             />
         </div>
 
-        {/* Splash Content */}
         <motion.div 
             initial={{ opacity: 0, scale: 0.8 }}
             animate={{ opacity: 1, scale: 1 }}
@@ -831,8 +822,6 @@ const SplashScreen = () => {
         >
             <div className="relative mb-8">
                 <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/30 to-teal-500/30 blur-[40px] rounded-full animate-pulse" />
-                
-                {/* Brand Logo Container */}
                 <div className="relative flex items-center justify-center w-28 h-28 bg-gray-900/40 backdrop-blur-2xl border border-white/10 rounded-[32px] shadow-2xl overflow-hidden">
                     <div className="relative w-full h-full flex items-center justify-center">
                         <ChartColumnIncreasingIcon 
@@ -857,7 +846,6 @@ const SplashScreen = () => {
             </motion.div>
         </motion.div>
 
-        {/* Loading Indicator */}
         <motion.div 
             initial={{ width: 0, opacity: 0 }}
             animate={{ width: 160, opacity: 1 }}
@@ -878,6 +866,18 @@ const SplashScreen = () => {
 
 const VIEWS = ['dashboard', 'planner', 'storage', 'game', 'settings'];
 
+interface MonthData {
+    profit?: string;
+    loss?: string;
+    note?: string;
+    isSaved?: boolean;
+}
+
+interface Profile {
+    name: string;
+    image: string | null;
+}
+
 export default function App() {
   // --- State ---
   const [view, setView] = useState('dashboard');
@@ -885,26 +885,104 @@ export default function App() {
   const [showSplash, setShowSplash] = useState(true); 
   const [colorTheme, setColorTheme] = useState('green');
   const [prices, setPrices] = useState({ btc: 8500000, gold: 7200 });
-  const [investments, setInvestments] = useState({}); 
-  const [monthlyData, setMonthlyData] = useState({}); 
-  const [profile, setProfile] = useState({ name: 'San • dept', image: null });
+  const [investments, setInvestments] = useState<Record<string, boolean>>({}); 
+  const [monthlyData, setMonthlyData] = useState<Record<number, MonthData>>({}); 
+  const [profile, setProfile] = useState<Profile>({ name: 'San • dept', image: null });
   const [selectedMonth, setSelectedMonth] = useState(0); 
   const [saveStatus, setSaveStatus] = useState('');
-  // New Notification State
+  
+  // Notification State
   const [notificationsEnabled, setNotificationsEnabled] = useState(false);
   const [notificationTime, setNotificationTime] = useState('09:00');
-  const [notificationStatus, setNotificationStatus] = useState(''); // '' | 'saved' | 'checking'
-  const lastNotificationDate = useRef(null);
+  const [notificationStatus, setNotificationStatus] = useState(''); 
+  const lastNotificationDate = useRef<string | null>(null);
+  
+  // Audio Ref
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  // Platform Detection
+  const isIOS = useMemo(() => {
+     return /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream;
+  }, []);
+  const [isStandalone, setIsStandalone] = useState(false);
+
+  useEffect(() => {
+     const checkStandalone = () => {
+         setIsStandalone(window.matchMedia('(display-mode: standalone)').matches || (window.navigator as any).standalone === true);
+     };
+     checkStandalone();
+     window.addEventListener('resize', checkStandalone);
+     return () => window.removeEventListener('resize', checkStandalone);
+  }, []);
+
+  // Initialize Audio
+  useEffect(() => {
+      audioRef.current = new Audio("https://assets.mixkit.co/sfx/preview/mixkit-software-interface-start-2574.mp3");
+      audioRef.current.load(); // Preload
+  }, []);
+
+  // Wake Lock Ref
+  const wakeLockRef = useRef<any>(null);
+
+  const requestWakeLock = async () => {
+    if ('wakeLock' in navigator) {
+        try {
+            wakeLockRef.current = await (navigator as any).wakeLock.request('screen');
+            console.log('Wake Lock active');
+        } catch (err: any) {
+            console.log(`Wake Lock Error: ${err.name}, ${err.message}`);
+        }
+    }
+  };
+
+  const releaseWakeLock = async () => {
+      if (wakeLockRef.current) {
+          try {
+             await wakeLockRef.current.release();
+             wakeLockRef.current = null;
+             console.log('Wake Lock released');
+          } catch(e) {
+              console.log("Error releasing wake lock", e);
+          }
+      }
+  }
+
+  // Handle Visibility Change for Wake Lock
+  useEffect(() => {
+      const handleVisibilityChange = async () => {
+          if (notificationsEnabled && document.visibilityState === 'visible' && !wakeLockRef.current) {
+              await requestWakeLock();
+          }
+      };
+      document.addEventListener('visibilitychange', handleVisibilityChange);
+      return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+  }, [notificationsEnabled]);
+
+
+  // Function to unlock audio on first interaction
+  const unlockAudio = useCallback(() => {
+      const audio = audioRef.current;
+      if (audio) {
+          audio.volume = 0;
+          const playPromise = audio.play();
+          if (playPromise !== undefined) {
+              playPromise.then(() => {
+                  audio.pause();
+                  audio.currentTime = 0;
+                  audio.volume = 0.5; // Reset volume for actual alerts
+              }).catch(e => console.log("Audio unlock failed (user gesture required)", e));
+          }
+      }
+  }, []);
 
   // Swipe Gesture State
-  const [touchStart, setTouchStart] = useState(null);
-  const [touchEnd, setTouchEnd] = useState(null);
+  const [touchStart, setTouchStart] = useState<number | null>(null);
+  const [touchEnd, setTouchEnd] = useState<number | null>(null);
 
   const currentTheme = THEMES[colorTheme] || THEMES.green;
 
   // --- Effects ---
 
-  // Splash Screen Effect
   useEffect(() => {
     const timer = setTimeout(() => {
         setShowSplash(false);
@@ -912,7 +990,6 @@ export default function App() {
     return () => clearTimeout(timer);
   }, []);
 
-  // Load from LocalStorage
   useEffect(() => {
     const savedData = localStorage.getItem('investmentApp_v4'); 
     if (savedData) {
@@ -923,13 +1000,11 @@ export default function App() {
       setDarkMode(parsed.darkMode || false);
       const savedTheme = parsed.colorTheme;
       setColorTheme(THEMES[savedTheme] ? savedTheme : 'green');
-      // Load Notification Settings
       setNotificationsEnabled(parsed.notificationsEnabled || false);
       setNotificationTime(parsed.notificationTime || '09:00');
     }
   }, []);
 
-  // Save to LocalStorage
   useEffect(() => {
     try {
       localStorage.setItem('investmentApp_v4', JSON.stringify({
@@ -946,7 +1021,17 @@ export default function App() {
     }
   }, [investments, monthlyData, profile, darkMode, colorTheme, notificationsEnabled, notificationTime]);
 
-  // Live Price Simulation
+  // Manage Wake Lock based on notification status
+  useEffect(() => {
+      if (notificationsEnabled) {
+          requestWakeLock();
+      } else {
+          releaseWakeLock();
+      }
+      return () => { releaseWakeLock(); };
+  }, [notificationsEnabled]);
+
+
   useEffect(() => {
     const interval = setInterval(() => {
       setPrices(prev => ({
@@ -957,7 +1042,53 @@ export default function App() {
     return () => clearInterval(interval);
   }, []);
 
-  // Notification Checker Logic
+  // Updated Notification Logic
+  const triggerNotification = useCallback((message: string) => {
+    console.log("Triggering notification:", message);
+    
+    // 1. Play Sound (Try-Catch in case of error)
+    const audio = audioRef.current;
+    if (audio) {
+        audio.currentTime = 0;
+        audio.volume = 1.0;
+        const playPromise = audio.play();
+        if (playPromise !== undefined) {
+            playPromise.catch(e => console.log("Audio play blocked", e));
+        }
+    }
+
+    // 2. Vibration (Critical for mobile feedback)
+    if ("vibrate" in navigator) {
+        try {
+            navigator.vibrate([200, 100, 200, 100, 400]);
+        } catch(e) {
+            console.log("Vibration not supported");
+        }
+    }
+    
+    // 3. Try Native Notification
+    if (Notification.permission === "granted") {
+      try {
+        const notif = new Notification("Invers Wealth", {
+          body: message,
+          icon: "https://cdn-icons-png.flaticon.com/512/1041/1041888.png", 
+          badge: "https://cdn-icons-png.flaticon.com/512/1041/1041888.png",
+          vibrate: [200, 100, 200],
+          tag: 'invers-reminder',
+          renotify: true,
+          requireInteraction: true 
+        } as any);
+        
+        notif.onclick = function() {
+            window.focus();
+            this.close();
+        };
+      } catch (e) {
+        console.log("Native notification failed", e);
+      }
+    }
+  }, []);
+
   useEffect(() => {
     if (!notificationsEnabled) return;
 
@@ -966,33 +1097,17 @@ export default function App() {
         const currentTimeString = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
         const todayDateString = now.toDateString();
 
-        // Check if current time matches set time AND we haven't notified today yet
+        // Check if time matches and we haven't notified today
         if (currentTimeString === notificationTime && lastNotificationDate.current !== todayDateString) {
-            
-            // Try to send notification
-            if (Notification.permission === "granted") {
-                new Notification("Invers Wealth Reminder", {
-                    body: "Time to track your daily investments! 🚀",
-                    icon: "/favicon.ico" // Placeholder
-                });
-                lastNotificationDate.current = todayDateString;
-            } else if (Notification.permission !== "denied") {
-                Notification.requestPermission().then(permission => {
-                    if (permission === "granted") {
-                        new Notification("Invers Wealth Reminder", {
-                            body: "Time to track your daily investments! 🚀"
-                        });
-                        lastNotificationDate.current = todayDateString;
-                    }
-                });
-            }
+            triggerNotification("Time to track your daily investments! 🚀");
+            lastNotificationDate.current = todayDateString;
         }
     };
 
-    // Check every 30 seconds to be safe
-    const interval = setInterval(checkTime, 30000);
+    // Check every 1 second to ensure we don't miss the minute window on slower devices
+    const interval = setInterval(checkTime, 1000);
     return () => clearInterval(interval);
-  }, [notificationsEnabled, notificationTime]);
+  }, [notificationsEnabled, notificationTime, triggerNotification]);
 
   useEffect(() => {
     if (saveStatus) {
@@ -1001,7 +1116,6 @@ export default function App() {
     }
   }, [saveStatus]);
 
-  // Notification Status Timer
   useEffect(() => {
     if (notificationStatus) {
         const timer = setTimeout(() => setNotificationStatus(''), 3000);
@@ -1032,7 +1146,7 @@ export default function App() {
 
   // --- Actions ---
 
-  const toggleDay = (dayIndex) => {
+  const toggleDay = (dayIndex: number) => {
     const key = `${selectedMonth}-${dayIndex}`;
     setInvestments(prev => ({
       ...prev,
@@ -1040,7 +1154,7 @@ export default function App() {
     }));
   };
 
-  const updateMonthData = (field, value) => {
+  const updateMonthData = (field: keyof MonthData, value: string) => {
     setMonthlyData(prev => ({
       ...prev,
       [selectedMonth]: {
@@ -1061,8 +1175,8 @@ export default function App() {
     setSaveStatus('saved');
   };
 
-  const handleImageUpload = (e) => {
-    const file = e.target.files[0];
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
     if (file) {
       if (file.size > 500000) {
         console.warn("Image is too large. Please select an image under 500KB.");
@@ -1070,66 +1184,72 @@ export default function App() {
       }
       const reader = new FileReader();
       reader.onloadend = () => {
-        setProfile(prev => ({ ...prev, image: reader.result }));
+        if (typeof reader.result === 'string') {
+            setProfile(prev => ({ ...prev, image: reader.result as string }));
+        }
       };
       reader.readAsDataURL(file);
     }
   };
 
-  const handleSaveNotificationTime = () => {
+  const handleSaveNotificationTime = async () => {
+      unlockAudio(); // Important: User interaction here allows audio playback
+      
       if (!notificationsEnabled) return;
       
-      // Request permission immediately when saving if not granted
+      // Request permission immediately
       if (Notification.permission !== "granted" && Notification.permission !== "denied") {
-          Notification.requestPermission();
+          await Notification.requestPermission();
       }
       
+      // Reset tracker so user can test the new time immediately if it matches current time
+      lastNotificationDate.current = null;
+      
       setNotificationStatus('saved');
+      
+      // Request Wake Lock to keep screen alive for reliable notification
+      requestWakeLock();
+  };
+
+  const handleToggleNotification = async () => {
+      unlockAudio(); // User interaction
+      
+      if (!notificationsEnabled) {
+          // Turning ON
+          if (Notification.permission !== "granted") {
+              const permission = await Notification.requestPermission();
+              if (permission !== 'granted') {
+                  alert("Notifications are blocked. Please enable them in browser settings.");
+              }
+          }
+          requestWakeLock();
+      } else {
+          // Turning OFF
+          releaseWakeLock();
+      }
+      setNotificationsEnabled(!notificationsEnabled);
   };
 
   const handleTestNotification = async () => {
-      if (!("Notification" in window)) {
-          console.warn("This browser does not support desktop notifications");
-          return;
+      unlockAudio(); // User interaction
+      
+      if (Notification.permission !== "granted") {
+          const permission = await Notification.requestPermission();
+          if (permission !== 'granted') return;
       }
-
-      try {
-          let permission = Notification.permission;
-
-          if (permission !== "granted" && permission !== "denied") {
-              permission = await Notification.requestPermission();
-          }
-
-          if (permission === "granted") {
-              try {
-                  new Notification("Invers Wealth Test", {
-                      body: "This is how your reminder will look! 🔔",
-                      // Using a simple placeholder icon if available, or browser default
-                      icon: "/favicon.ico" 
-                  });
-              } catch (e) {
-                  // Fallback for sandboxed environments where Notification object exists but constructor fails
-                  console.warn("System notification blocked:", e);
-                  console.log("Test Successful! (Note: The actual system popup was blocked by this preview environment, but the logic is working).");
-              }
-          } else {
-              console.warn("Please enable notifications in your browser settings (Privacy & Security) to use this feature.");
-          }
-      } catch (error) {
-          console.error("Notification Error:", error);
-          console.error("Unable to trigger notification.");
-      }
+      
+      triggerNotification("This is how your reminder will look! 🔔");
   };
 
   // --- Swipe Gesture Handlers ---
   const minSwipeDistance = 50;
 
-  const onTouchStart = (e) => {
-    setTouchEnd(null); // otherwise the swipe is fired even with usual touch events
+  const onTouchStart = (e: React.TouchEvent) => {
+    setTouchEnd(null);
     setTouchStart(e.targetTouches[0].clientX);
   };
 
-  const onTouchMove = (e) => setTouchEnd(e.targetTouches[0].clientX);
+  const onTouchMove = (e: React.TouchEvent) => setTouchEnd(e.targetTouches[0].clientX);
 
   const onTouchEnd = () => {
     if (!touchStart || !touchEnd) return;
@@ -1137,17 +1257,13 @@ export default function App() {
     const isLeftSwipe = distance > minSwipeDistance;
     const isRightSwipe = distance < -minSwipeDistance;
 
-    // Disabled restriction: Now swipes work on Game page too
-
     if (isLeftSwipe || isRightSwipe) {
         const currentIndex = VIEWS.indexOf(view);
         if (isLeftSwipe) {
-            // Next View
             if (currentIndex < VIEWS.length - 1) {
                 setView(VIEWS[currentIndex + 1]);
             }
         } else {
-            // Previous View
             if (currentIndex > 0) {
                 setView(VIEWS[currentIndex - 1]);
             }
@@ -1198,7 +1314,6 @@ export default function App() {
         </div>
       </div>
 
-      {/* Live Prices Widgets - Grid updated for mobile readability */}
       <div className="grid grid-cols-2 gap-3">
         {/* BTC Widget */}
         <Card className="relative overflow-hidden group p-4">
@@ -1247,7 +1362,6 @@ export default function App() {
         </Card>
       </div>
 
-      {/* Progress Summary */}
       <Card>
         <h3 className="text-base font-bold mb-3 text-gray-900 dark:text-white">Investment Progress</h3>
         <div className="space-y-5">
@@ -1289,6 +1403,10 @@ export default function App() {
 
   const renderPlanner = () => {
     const isLocked = monthlyData[selectedMonth]?.isSaved;
+    
+    const year = 2026;
+    const firstDayIndex = new Date(year, selectedMonth, 1).getDay();
+    const daysInMonth = DAYS_IN_MONTH(selectedMonth, year);
 
     return (
     <div className="animate-fade-in flex flex-col pb-40 text-gray-900 dark:text-white">
@@ -1300,7 +1418,7 @@ export default function App() {
         >
           <ChevronLeft size={20} className={selectedMonth === 0 ? "text-gray-300" : "text-gray-900 dark:text-white"} />
         </button>
-        <h2 className="text-lg font-bold text-gray-900 dark:text-white w-32 text-center">{MONTHS[selectedMonth]}</h2>
+        <h2 className="text-lg font-bold text-gray-900 dark:text-white w-40 text-center">{MONTHS[selectedMonth]} 2026</h2>
         <button 
           onClick={() => setSelectedMonth(prev => Math.min(11, prev + 1))}
           className="p-1.5 rounded-full hover:bg-gray-100 dark:hover:bg-white/10 active:scale-95 transition-transform"
@@ -1317,7 +1435,11 @@ export default function App() {
       </div>
 
       <div className="grid grid-cols-7 gap-1.5 mb-6">
-        {Array.from({ length: DAYS_IN_MONTH(selectedMonth) }).map((_, i) => {
+        {Array.from({ length: firstDayIndex }).map((_, i) => (
+            <div key={`empty-${i}`} />
+        ))}
+        
+        {Array.from({ length: daysInMonth }).map((_, i) => {
           const isChecked = investments[`${selectedMonth}-${i + 1}`];
           return (
             <button
@@ -1341,7 +1463,6 @@ export default function App() {
         })}
       </div>
       
-      {/* Monthly Report Section */}
       <Card className="animate-fade-in relative transition-all duration-500">
         <div className="flex items-center gap-2 mb-3">
           <FileText size={16} className={currentTheme.text} />
@@ -1420,8 +1541,7 @@ export default function App() {
   };
 
   const renderStorage = () => {
-    // Calculate totals only for SAVED/LOCKED months
-    const savedRecords = Object.values(monthlyData).filter(data => data && data.isSaved);
+    const savedRecords = (Object.values(monthlyData) as MonthData[]).filter(data => data && data.isSaved);
     const totalProfit = savedRecords.reduce((acc, curr) => acc + (Number(curr.profit) || 0), 0);
     const totalLoss = savedRecords.reduce((acc, curr) => acc + (Number(curr.loss) || 0), 0);
     const net = totalProfit - totalLoss;
@@ -1430,7 +1550,6 @@ export default function App() {
       <div className="animate-fade-in space-y-5 pb-40 text-gray-900 dark:text-white">
          <h2 className="text-xl font-bold mb-4 text-gray-900 dark:text-white">Data Storage</h2>
   
-         {/* Net Summary Card */}
          <Card className="bg-gradient-to-br from-indigo-500 to-purple-600 border-none text-white p-5">
             <div className="flex justify-between items-center mb-1">
                <span className="text-indigo-100 text-xs font-medium uppercase tracking-wider">Net Balance</span>
@@ -1449,7 +1568,6 @@ export default function App() {
             </div>
          </Card>
   
-         {/* Database Entries */}
          <div className="space-y-3">
             <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider ml-1">Monthly Records</h3>
             {savedRecords.length === 0 ? (
@@ -1461,8 +1579,6 @@ export default function App() {
                MONTHS.map((month, index) => {
                   const data = monthlyData[index];
                   if (!data) return null; 
-                  
-                  // CRITICAL CHECK: Only show if saved/locked
                   if (!data.isSaved) return null;
   
                   return (
@@ -1472,7 +1588,7 @@ export default function App() {
                             <button 
                               onClick={() => {
                                  const newData = { ...monthlyData };
-                                 delete newData[index]; // Effectively deletes the record
+                                 delete newData[index]; 
                                  setMonthlyData(newData);
                               }}
                               className="text-gray-400 hover:text-red-500 transition-colors p-1"
@@ -1516,7 +1632,6 @@ export default function App() {
     <div className="animate-fade-in space-y-5 pb-24 text-gray-900 dark:text-white">
       <h2 className="text-xl font-bold mb-4 text-gray-900 dark:text-white">Settings</h2>
 
-      {/* Theme Picker */}
       <Card className="p-4">
         <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Color Theme</h3>
         <div className="flex items-center justify-between">
@@ -1543,11 +1658,9 @@ export default function App() {
         </div>
       </Card>
 
-      {/* Daily Reminders - NEW SECTION */}
       <Card className="p-4">
           <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Daily Reminder</h3>
           <div className="space-y-4">
-              {/* Enable Toggle */}
               <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
                       <div className={`p-2 rounded-lg text-white ${notificationsEnabled ? 'bg-orange-500' : 'bg-gray-400'}`}>
@@ -1560,17 +1673,36 @@ export default function App() {
                   </div>
                   <NotificationSwitch 
                       checked={notificationsEnabled} 
-                      onChange={() => {
-                          if (!notificationsEnabled) {
-                              // Ask for permission when enabling
-                              Notification.requestPermission();
-                          }
-                          setNotificationsEnabled(!notificationsEnabled);
-                      }}
+                      onChange={handleToggleNotification}
                   />
               </div>
 
-              {/* Time Picker */}
+              {/* iOS Warning */}
+              {notificationsEnabled && isIOS && !isStandalone && (
+                  <div className="p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-700/50 rounded-lg flex gap-3">
+                      <div className="shrink-0 text-yellow-600 dark:text-yellow-400 mt-0.5">
+                          <AlertTriangle size={16} />
+                      </div>
+                      <div className="text-xs text-yellow-800 dark:text-yellow-200">
+                          <p className="font-bold mb-1">iOS Notification Limit</p>
+                          <p>To receive notifications on iOS, please <strong>Add to Home Screen</strong> from the Share menu.</p>
+                      </div>
+                  </div>
+              )}
+
+              {/* Mobile Wake Lock Info */}
+              {notificationsEnabled && (
+                  <div className="p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700/50 rounded-lg flex gap-3">
+                      <div className="shrink-0 text-blue-600 dark:text-blue-400 mt-0.5">
+                          <Smartphone size={16} />
+                      </div>
+                      <div className="text-xs text-blue-800 dark:text-blue-200">
+                          <p className="font-bold mb-1">Reliability Tip</p>
+                          <p>Keep the app open or screen active for best results on mobile.</p>
+                      </div>
+                  </div>
+              )}
+
               {notificationsEnabled && (
                 <div className="animate-fade-in bg-gray-50 dark:bg-gray-800 p-3 rounded-xl border border-gray-100 dark:border-gray-700">
                     <div className="flex flex-col gap-3">
@@ -1635,21 +1767,18 @@ export default function App() {
   return (
     <div className={`h-[100dvh] w-full transition-colors duration-500 font-inter ${darkMode ? 'dark bg-gray-900' : 'bg-gray-50'} overflow-hidden`}>
       
-      {/* Background Ambience - Dynamic */}
+      {/* Background Ambience */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
         <div className={`absolute top-[-10%] left-[-10%] w-[50%] h-[50%] rounded-full ${currentTheme.blob} blur-[100px] transition-colors duration-700`} />
         <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] rounded-full bg-gray-400/10 blur-[100px]" />
       </div>
 
-      {/* Splash Screen */}
       <AnimatePresence mode="wait">
         {showSplash && <SplashScreen />}
       </AnimatePresence>
 
-      {/* Main Layout Container - Mobile Optimized */}
       <div className="relative h-full w-full sm:max-w-md sm:mx-auto sm:bg-white/50 dark:sm:bg-gray-900/50 sm:shadow-2xl sm:h-[95vh] sm:mt-[2.5vh] sm:rounded-[40px] sm:border-[8px] sm:border-gray-200 dark:sm:border-gray-800 flex flex-col backdrop-blur-sm overflow-hidden">
         
-        {/* Content Area with Swipe Detection */}
         <div 
             className="flex-1 overflow-y-auto p-4 scrollbar-hide touch-pan-y" 
             onTouchStart={onTouchStart} 
@@ -1661,8 +1790,6 @@ export default function App() {
            {view === 'storage' && renderStorage()}
            {view === 'settings' && renderSettings()}
            
-           {/* Game View - Persisted State */}
-           {/* Using CSS visibility instead of conditional rendering to keep the iframe alive */}
            <div className={cn("flex-col items-center justify-center h-full pb-32", view === 'game' ? "flex" : "hidden")}>
                <div className="relative w-full h-full max-w-[501px] shadow-2xl rounded-[32px] overflow-hidden border-4 border-gray-200 dark:border-gray-700 bg-black">
                  <EscapeRoadGame />
@@ -1670,7 +1797,6 @@ export default function App() {
            </div>
         </div>
 
-        {/* Bottom Navigation Dock - Fixed on mobile, contained on desktop */}
         <div className="absolute bottom-0 left-0 right-0 sm:static p-4 z-50 bg-gradient-to-t from-gray-50 via-gray-50/95 to-transparent dark:from-gray-900 dark:via-gray-900/95 sm:from-transparent sm:via-transparent sm:to-transparent transition-all duration-300">
           <div className="bg-white/90 dark:bg-gray-900/90 backdrop-blur-xl border border-gray-200/50 dark:border-gray-700/50 rounded-2xl p-1.5 flex justify-between items-center shadow-lg shadow-gray-200/50 dark:shadow-black/50">
             <IconButton 
@@ -1697,7 +1823,7 @@ export default function App() {
             <IconButton 
               key="game"
               Icon={GamepadIcon} 
-              active={view === 'game'}
+              active={view === 'game'} 
               onClick={() => setView('game')}
               theme={currentTheme}
             />
@@ -1714,38 +1840,6 @@ export default function App() {
       </div>
 
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
-        
-        .font-inter {
-            font-family: 'Inter', sans-serif;
-        }
-
-        .touch-pan-y {
-            touch-action: pan-y;
-        }
-
-        .scrollbar-hide::-webkit-scrollbar {
-            display: none;
-        }
-        .scrollbar-hide {
-            -ms-overflow-style: none;
-            scrollbar-width: none;
-        }
-        @keyframes bounce-short {
-          0%, 100% { transform: translateY(0); }
-          50% { transform: translateY(-20%); }
-        }
-        .animate-bounce-short {
-          animation: bounce-short 0.5s ease-in-out;
-        }
-        @keyframes fade-in {
-          from { opacity: 0; transform: translateY(10px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-        .animate-fade-in {
-          animation: fade-in 0.3s ease-out forwards;
-        }
-
         /* --- Theme Switch CSS (Provided by User) --- */
         .theme-switch {
           --toggle-size: 30px;
@@ -2059,6 +2153,30 @@ export default function App() {
         .switch input:checked + .toggle > .right {
           transform: rotateX(10deg) rotateY(0deg);
           color: #487bdb;
+        }
+
+        /* Custom Utilities */
+        .font-inter {
+            font-family: 'Inter', sans-serif;
+        }
+
+        .touch-pan-y {
+            touch-action: pan-y;
+        }
+
+        @keyframes bounce-short {
+          0%, 100% { transform: translateY(0); }
+          50% { transform: translateY(-20%); }
+        }
+        .animate-bounce-short {
+          animation: bounce-short 0.5s ease-in-out;
+        }
+        @keyframes fade-in {
+          from { opacity: 0; transform: translateY(10px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-in {
+          animation: fade-in 0.3s ease-out forwards;
         }
       `}</style>
     </div>
