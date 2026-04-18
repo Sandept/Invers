@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="https://raw.githubusercontent.com/Sandept/Invers/main/logo.svg" alt="Invers Logo" width="160"/>
+<img src="https://raw.githubusercontent.com/Sandept/Invers/main/Invers-logo.svg" alt="Invers Logo" width="160"/>
 
 # Invers
 
