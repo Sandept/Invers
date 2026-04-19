@@ -645,40 +645,6 @@ const EscapeRoadGame = () => {
   const [loading, setLoading] = useState(true);
   const [isPlaying, setIsPlaying] = useState(false);
 
-<<<<<<< HEAD
-=======
-  useEffect(() => {
-     if (!isPlaying) return;
-
-     const resizeGame = () => {
-        if (!iframeRef.current || !containerRef.current) return;
-        
-        const container = containerRef.current;
-        const width = container.clientWidth;
-        const height = container.clientHeight;
-        
-        const dpr = window.devicePixelRatio || 1;
-        const scale = Math.min(dpr, 2.5);
-        
-        iframeRef.current.style.width = `${width * scale}px`;
-        iframeRef.current.style.height = `${height * scale}px`;
-        iframeRef.current.style.transform = `scale(${1 / scale})`;
-        iframeRef.current.style.transformOrigin = 'top left';
-     };
-
-     setTimeout(resizeGame, 50);
-     const observer = new ResizeObserver(resizeGame);
-     if (containerRef.current) observer.observe(containerRef.current);
-     return () => observer.disconnect();
-  }, [isPlaying]);
-
-  const handleFocus = () => {
-      if (iframeRef.current) {
-          iframeRef.current.contentWindow.focus();
-      }
-  };
-
->>>>>>> 06209b8e09a6a22dcbca692033bbb7b4b432f1b0
   return (
     <div className="w-full h-full relative overflow-hidden bg-[#1a1a1a]">
        {!isPlaying ? (
@@ -855,7 +821,6 @@ export default function App() {
   const [notificationTime, setNotificationTime] = useState('09:00');
   const [notificationStatus, setNotificationStatus] = useState(''); 
   const lastNotificationDate = useRef(null);
-<<<<<<< HEAD
   
   // Audio Context Ref
   const audioCtxRef = useRef(null);
@@ -872,26 +837,6 @@ export default function App() {
           }
       } catch (e) {
           console.log("Audio unlock failed (user gesture required)", e);
-=======
-  // Audio Ref
-  const audioRef = useRef(null);
-
-  // Initialize Audio
-  useEffect(() => {
-      audioRef.current = new Audio("https://assets.mixkit.co/sfx/preview/mixkit-software-interface-start-2574.mp3");
-  }, []);
-
-  // Function to unlock audio on first interaction
-  const unlockAudio = () => {
-      const audio = audioRef.current;
-      if (audio) {
-          audio.volume = 0;
-          audio.play().then(() => {
-              audio.pause();
-              audio.currentTime = 0;
-              audio.volume = 0.5; // Reset volume for actual alerts
-          }).catch(e => console.log("Audio unlock failed (user gesture required)", e));
->>>>>>> 06209b8e09a6a22dcbca692033bbb7b4b432f1b0
       }
   };
 
@@ -965,7 +910,6 @@ export default function App() {
         }
     }
     
-<<<<<<< HEAD
     // 3. Play Sound via Web Audio API
     try {
         if (audioCtxRef.current) {
@@ -990,13 +934,6 @@ export default function App() {
         }
     } catch(e) {
         console.log("Audio play blocked", e);
-=======
-    // 3. Play Sound
-    const audio = audioRef.current;
-    if (audio) {
-        audio.currentTime = 0;
-        audio.play().catch(e => console.log("Audio play blocked", e));
->>>>>>> 06209b8e09a6a22dcbca692033bbb7b4b432f1b0
     }
 
     // 4. Try Native Notification
@@ -1181,7 +1118,7 @@ export default function App() {
   // --- Render Views ---
 
   const renderDashboard = () => (
-    <div className="space-y-6 pb-40 animate-fade-in text-gray-900 dark:text-white">
+    <div className="space-y-6 pb-24 animate-fade-in text-gray-900 dark:text-white">
       {/* Header Profile & Summary */}
       <div className="flex justify-between items-start mb-4 px-2">
         <div className="flex flex-col gap-4 items-start">
@@ -1309,25 +1246,16 @@ export default function App() {
   );
 
   const renderPlanner = () => {
-<<<<<<< HEAD
     const monthKey = `${selectedYear}-${selectedMonth}`;
     const currentMonthData = monthlyData[monthKey] || (selectedYear === 2026 ? monthlyData[selectedMonth] : undefined) || {};
     const isLocked = currentMonthData.isSaved;
     
     const firstDayIndex = new Date(selectedYear, selectedMonth, 1).getDay();
     const daysInMonth = DAYS_IN_MONTH(selectedMonth, selectedYear);
-=======
-    const isLocked = monthlyData[selectedMonth]?.isSaved;
-    
-    const year = 2026;
-    const firstDayIndex = new Date(year, selectedMonth, 1).getDay();
-    const daysInMonth = DAYS_IN_MONTH(selectedMonth, year);
->>>>>>> 06209b8e09a6a22dcbca692033bbb7b4b432f1b0
 
     return (
-    <div className="animate-fade-in flex flex-col pb-40 text-gray-900 dark:text-white">
+    <div className="animate-fade-in flex flex-col pb-24 text-gray-900 dark:text-white">
       <div className="flex items-center justify-between mb-4 px-1">
-<<<<<<< HEAD
         <div className="flex items-center gap-2">
             <h2 className="text-xl font-black text-gray-900 dark:text-white tracking-tight">
                 {MONTHS[selectedMonth]}
@@ -1377,23 +1305,6 @@ export default function App() {
                 <ChevronRight size={20} className={selectedMonth === 11 && selectedYear === 2100 ? "text-gray-300 dark:text-gray-600" : "text-gray-900 dark:text-white"} />
             </button>
         </div>
-=======
-        <button 
-          onClick={() => setSelectedMonth(prev => Math.max(0, prev - 1))}
-          className="p-1.5 rounded-full hover:bg-gray-100 dark:hover:bg-white/10 active:scale-95 transition-transform"
-          disabled={selectedMonth === 0}
-        >
-          <ChevronLeft size={20} className={selectedMonth === 0 ? "text-gray-300" : "text-gray-900 dark:text-white"} />
-        </button>
-        <h2 className="text-lg font-bold text-gray-900 dark:text-white w-40 text-center">{MONTHS[selectedMonth]} 2026</h2>
-        <button 
-          onClick={() => setSelectedMonth(prev => Math.min(11, prev + 1))}
-          className="p-1.5 rounded-full hover:bg-gray-100 dark:hover:bg-white/10 active:scale-95 transition-transform"
-          disabled={selectedMonth === 11}
-        >
-          <ChevronRight size={20} className={selectedMonth === 11 ? "text-gray-300" : "text-gray-900 dark:text-white"} />
-        </button>
->>>>>>> 06209b8e09a6a22dcbca692033bbb7b4b432f1b0
       </div>
 
       <div className="grid grid-cols-7 gap-1 mb-2 px-1">
@@ -1408,14 +1319,10 @@ export default function App() {
         ))}
         
         {Array.from({ length: daysInMonth }).map((_, i) => {
-<<<<<<< HEAD
           // Compatibility logic for legacy 2026 keys without year prefix
           const isLegacyChecked = selectedYear === 2026 && investments[`${selectedMonth}-${i + 1}`];
           const isChecked = investments[`${selectedYear}-${selectedMonth}-${i + 1}`] || isLegacyChecked;
 
-=======
-          const isChecked = investments[`${selectedMonth}-${i + 1}`];
->>>>>>> 06209b8e09a6a22dcbca692033bbb7b4b432f1b0
           return (
             <button
               key={i}
@@ -1516,7 +1423,6 @@ export default function App() {
   };
 
   const renderStorage = () => {
-<<<<<<< HEAD
     // Collect and format all records including legacy compatibility
     const savedRecords = Object.entries(monthlyData)
       .map(([key, data]) => {
@@ -1535,15 +1441,10 @@ export default function App() {
 
     const totalProfit = savedRecords.reduce((acc, curr) => acc + (Number(curr.data.profit) || 0), 0);
     const totalLoss = savedRecords.reduce((acc, curr) => acc + (Number(curr.data.loss) || 0), 0);
-=======
-    const savedRecords = Object.values(monthlyData).filter(data => data && data.isSaved);
-    const totalProfit = savedRecords.reduce((acc, curr) => acc + (Number(curr.profit) || 0), 0);
-    const totalLoss = savedRecords.reduce((acc, curr) => acc + (Number(curr.loss) || 0), 0);
->>>>>>> 06209b8e09a6a22dcbca692033bbb7b4b432f1b0
     const net = totalProfit - totalLoss;
     
     return (
-      <div className="animate-fade-in space-y-5 pb-40 text-gray-900 dark:text-white">
+      <div className="animate-fade-in space-y-5 pb-24 text-gray-900 dark:text-white">
          <h2 className="text-xl font-bold mb-4 text-gray-900 dark:text-white">Data Storage</h2>
   
          <Card className="bg-gradient-to-br from-indigo-500 to-purple-600 border-none text-white p-5">
@@ -1572,15 +1473,7 @@ export default function App() {
                   <p className="text-sm">No locked data recorded yet.</p>
                </div>
             ) : (
-<<<<<<< HEAD
                savedRecords.map(({ key, year, monthIndex, data }) => {
-=======
-               MONTHS.map((month, index) => {
-                  const data = monthlyData[index];
-                  if (!data) return null; 
-                  if (!data.isSaved) return null;
-  
->>>>>>> 06209b8e09a6a22dcbca692033bbb7b4b432f1b0
                   return (
                       <Card key={key} className="p-4">
                           <div className="flex justify-between items-start mb-2">
@@ -1590,11 +1483,7 @@ export default function App() {
                             <button 
                               onClick={() => {
                                  const newData = { ...monthlyData };
-<<<<<<< HEAD
                                  delete newData[key]; 
-=======
-                                 delete newData[index]; 
->>>>>>> 06209b8e09a6a22dcbca692033bbb7b4b432f1b0
                                  setMonthlyData(newData);
                               }}
                               className="text-gray-400 hover:text-red-500 transition-colors p-1"
@@ -1776,7 +1665,7 @@ export default function App() {
            {view === 'storage' && renderStorage()}
            {view === 'settings' && renderSettings()}
            
-           <div className={cn("flex-col items-center justify-center h-full pb-32", view === 'game' ? "flex" : "hidden")}>
+           <div className={cn("flex-col items-center justify-center h-full pb-24", view === 'game' ? "flex" : "hidden")}>
                <div className="relative w-full h-full max-w-[501px] shadow-2xl rounded-[32px] overflow-hidden border-4 border-gray-200 dark:border-gray-700 bg-black">
                  <EscapeRoadGame />
                </div>
