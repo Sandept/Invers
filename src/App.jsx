@@ -1,16 +1,16 @@
 import React, { useState, useEffect, useMemo, forwardRef, useRef, useCallback, useImperativeHandle } from 'react';
 import { motion, useAnimation, AnimatePresence } from 'framer-motion';
-import { 
-  Settings, 
-  CheckCircle2, 
-  Moon, 
-  Sun, 
-  ChevronLeft, 
-  ChevronRight, 
-  TrendingUp, 
-  TrendingDown, 
-  Bitcoin, 
-  Coins, 
+import {
+  Settings,
+  CheckCircle2,
+  Moon,
+  Sun,
+  ChevronLeft,
+  ChevronRight,
+  TrendingUp,
+  TrendingDown,
+  Bitcoin,
+  Coins,
   Palette,
   Save,
   FileText,
@@ -366,100 +366,100 @@ CogIcon.displayName = 'CogIcon';
 
 // 4. DatabaseIcon
 const DATABASE_VARIANTS = {
-    normal: { pathLength: 1, opacity: 1 },
-    hidden: { pathLength: 0, opacity: 0 }
+  normal: { pathLength: 1, opacity: 1 },
+  hidden: { pathLength: 0, opacity: 0 }
 };
-  
+
 const DatabaseIcon = forwardRef(
-({ onMouseEnter, onMouseLeave, className, size = 28, ...props }, ref) => {
+  ({ onMouseEnter, onMouseLeave, className, size = 28, ...props }, ref) => {
     const controls = useAnimation();
     const isControlledRef = useRef(false);
 
     useImperativeHandle(ref, () => {
-    isControlledRef.current = true;
-    return {
+      isControlledRef.current = true;
+      return {
         startAnimation: async () => {
-            await controls.start("hidden");
-            await controls.start((i) => ({
-                pathLength: 1, 
-                opacity: 1, 
-                transition: { delay: i * 0.15, duration: 0.4, ease: "easeOut" }
-            }));
+          await controls.start("hidden");
+          await controls.start((i) => ({
+            pathLength: 1,
+            opacity: 1,
+            transition: { delay: i * 0.15, duration: 0.4, ease: "easeOut" }
+          }));
         },
         stopAnimation: () => controls.start('normal'),
-    };
+      };
     });
 
     const handleMouseEnter = useCallback(
-    async (e) => {
+      async (e) => {
         if (!isControlledRef.current) {
-            await controls.start("hidden");
-            await controls.start((i) => ({
-                pathLength: 1, 
-                opacity: 1, 
-                transition: { delay: i * 0.15, duration: 0.4, ease: "easeOut" }
-            }));
+          await controls.start("hidden");
+          await controls.start((i) => ({
+            pathLength: 1,
+            opacity: 1,
+            transition: { delay: i * 0.15, duration: 0.4, ease: "easeOut" }
+          }));
         } else {
-            onMouseEnter?.(e);
+          onMouseEnter?.(e);
         }
-    },
-    [controls, onMouseEnter]
+      },
+      [controls, onMouseEnter]
     );
 
     const handleMouseLeave = useCallback(
-    (e) => {
+      (e) => {
         if (!isControlledRef.current) {
-            controls.start('normal');
+          controls.start('normal');
         } else {
-            onMouseLeave?.(e);
+          onMouseLeave?.(e);
         }
-    },
-    [controls, onMouseLeave]
+      },
+      [controls, onMouseLeave]
     );
 
     return (
-    <div
+      <div
         className={cn("flex items-center justify-center select-none", className)}
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
         {...props}
-    >
+      >
         <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width={size}
-            height={size}
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
+          xmlns="http://www.w3.org/2000/svg"
+          width={size}
+          height={size}
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
         >
-        <motion.ellipse 
-            cx="12" cy="5" rx="9" ry="3" 
+          <motion.ellipse
+            cx="12" cy="5" rx="9" ry="3"
             variants={DATABASE_VARIANTS}
             initial="normal"
             animate={controls}
             custom={0}
-        />
-        <motion.path 
-            d="M3 12A9 3 0 0 0 21 12" 
+          />
+          <motion.path
+            d="M3 12A9 3 0 0 0 21 12"
             variants={DATABASE_VARIANTS}
             initial="normal"
             animate={controls}
             custom={1}
-        />
-        <motion.path 
-            d="M3 5V19A9 3 0 0 0 21 19V5" 
+          />
+          <motion.path
+            d="M3 5V19A9 3 0 0 0 21 19V5"
             variants={DATABASE_VARIANTS}
             initial="normal"
             animate={controls}
             custom={2}
-        />
+          />
         </svg>
-    </div>
+      </div>
     );
-}
+  }
 );
 DatabaseIcon.displayName = 'DatabaseIcon';
 
@@ -534,22 +534,22 @@ const GamepadIcon = forwardRef(
           strokeLinecap="round"
           strokeLinejoin="round"
         >
-          <motion.rect 
-            x="2" y="6" width="20" height="12" rx="2" 
+          <motion.rect
+            x="2" y="6" width="20" height="12" rx="2"
             variants={GAMEPAD_VARIANTS}
             initial="normal"
             animate={controls}
             custom={0}
           />
-          <motion.path 
-            d="M6 12h4m-2-2v4" 
+          <motion.path
+            d="M6 12h4m-2-2v4"
             variants={GAMEPAD_VARIANTS}
             initial="normal"
             animate={controls}
             custom={1}
           />
-          <motion.path 
-            d="M15 11h.01" 
+          <motion.path
+            d="M15 11h.01"
             strokeWidth="3"
             strokeLinecap="round"
             strokeLinejoin="round"
@@ -558,8 +558,8 @@ const GamepadIcon = forwardRef(
             animate={controls}
             custom={2}
           />
-          <motion.path 
-            d="M18 13h.01" 
+          <motion.path
+            d="M18 13h.01"
             strokeWidth="3"
             strokeLinecap="round"
             strokeLinejoin="round"
@@ -585,53 +585,53 @@ const Card = ({ children, className = "" }) => (
 );
 
 const ThemeSwitch = ({ checked, onChange }) => (
-    <label className="theme-switch" style={{ '--toggle-size': '12px' }}>
-      <input 
-        type="checkbox" 
-        className="theme-switch__checkbox" 
-        checked={checked}
-        onChange={onChange}
-      />
-      <div className="theme-switch__container">
-        <div className="theme-switch__clouds"></div>
-        <div className="theme-switch__stars-container">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 144 55" fill="none" className="w-full h-full">
-                <circle cx="20" cy="20" r="10" fill="currentColor"/>
-                <circle cx="80" cy="10" r="8" fill="currentColor"/>
-                <circle cx="120" cy="40" r="9" fill="currentColor"/>
-                <path fill="currentColor" d="M108.86 35.7876C109.523 35.7876 110.06 35.2505 110.06 34.5876C110.06 33.9247 109.523 33.3876 108.86 33.3876C108.198 33.3876 107.66 33.9247 107.66 34.5876C107.66 35.2505 108.198 35.7876 108.86 35.7876Z"/>
-            </svg>
-        </div>
-        <div className="theme-switch__circle-container">
-          <div className="theme-switch__sun-moon-container">
-            <div className="theme-switch__moon">
-              <div className="theme-switch__spot"></div>
-              <div className="theme-switch__spot"></div>
-              <div className="theme-switch__spot"></div>
-            </div>
+  <label className="theme-switch" style={{ '--toggle-size': '12px' }}>
+    <input
+      type="checkbox"
+      className="theme-switch__checkbox"
+      checked={checked}
+      onChange={onChange}
+    />
+    <div className="theme-switch__container">
+      <div className="theme-switch__clouds"></div>
+      <div className="theme-switch__stars-container">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 144 55" fill="none" className="w-full h-full">
+          <circle cx="20" cy="20" r="10" fill="currentColor" />
+          <circle cx="80" cy="10" r="8" fill="currentColor" />
+          <circle cx="120" cy="40" r="9" fill="currentColor" />
+          <path fill="currentColor" d="M108.86 35.7876C109.523 35.7876 110.06 35.2505 110.06 34.5876C110.06 33.9247 109.523 33.3876 108.86 33.3876C108.198 33.3876 107.66 33.9247 107.66 34.5876C107.66 35.2505 108.198 35.7876 108.86 35.7876Z" />
+        </svg>
+      </div>
+      <div className="theme-switch__circle-container">
+        <div className="theme-switch__sun-moon-container">
+          <div className="theme-switch__moon">
+            <div className="theme-switch__spot"></div>
+            <div className="theme-switch__spot"></div>
+            <div className="theme-switch__spot"></div>
           </div>
         </div>
       </div>
-    </label>
+    </div>
+  </label>
 );
 
 const NotificationSwitch = ({ checked, onChange }) => (
-    <label className="switch" style={{ fontSize: '12px' }}>
-      <input 
-        type="checkbox" 
-        className="cb" 
-        checked={checked}
-        onChange={onChange}
-      />
-      <span className="toggle">
-        <span className="left">off</span>
-        <span className="right">on</span>
-      </span>
-    </label>
+  <label className="switch" style={{ fontSize: '12px' }}>
+    <input
+      type="checkbox"
+      className="cb"
+      checked={checked}
+      onChange={onChange}
+    />
+    <span className="toggle">
+      <span className="left">off</span>
+      <span className="right">on</span>
+    </span>
+  </label>
 );
 
 const IconButton = ({ Icon, active, onClick, theme }) => (
-  <button 
+  <button
     onClick={onClick}
     className={`flex-1 p-2 rounded-xl transition-all duration-200 group flex flex-col items-center justify-center gap-1 focus:outline-none ${active ? `${theme.lightBg} ${theme.text}` : 'text-gray-400 md:hover:bg-gray-100 dark:md:hover:bg-white/5 active:bg-gray-100 dark:active:bg-gray-800'}`}
   >
@@ -644,156 +644,183 @@ const IconButton = ({ Icon, active, onClick, theme }) => (
 const EscapeRoadGame = () => {
   const [loading, setLoading] = useState(true);
   const [isPlaying, setIsPlaying] = useState(false);
+  const iframeRef = useRef(null);
+  const containerRef = useRef(null);
+
+  useEffect(() => {
+    if (!isPlaying) return;
+
+    const handleResize = () => {
+      if (!iframeRef.current || !containerRef.current) return;
+      const container = containerRef.current;
+      const width = container.clientWidth;
+      const height = container.clientHeight;
+      // Cap pixel ratio to 2 for optimal mobile performance while maintaining HD
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+
+      const iframe = iframeRef.current;
+      iframe.style.width = `${width * dpr}px`;
+      iframe.style.height = `${height * dpr}px`;
+      iframe.style.transform = `scale(${1 / dpr})`;
+      iframe.style.transformOrigin = '0 0';
+    };
+
+    handleResize(); // Initial setup
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, [isPlaying]);
 
   return (
-    <div className="w-full h-full relative overflow-hidden bg-[#1a1a1a]">
-       {!isPlaying ? (
-           <div className="absolute inset-0 flex flex-col items-center justify-center bg-gray-900 z-20 overflow-hidden group cursor-pointer" onClick={() => setIsPlaying(true)}>
-               <div className="absolute inset-0 bg-gray-900">
-                  <img 
-                    src="https://m.media-amazon.com/images/I/81CaNyaWp2L.png" 
-                    alt="Escape Road Thumbnail" 
-                    className="w-full h-full object-cover opacity-60 group-hover:opacity-100 transition-opacity duration-700 hover:scale-105 transform"
-                    onError={(e) => {
-                      e.target.style.display = 'none'; 
-                    }}
-                  />
-                  <div className="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition-colors duration-500"></div>
-               </div>
+    <div ref={containerRef} className="w-full h-full relative overflow-hidden bg-[#1a1a1a]">
+      {!isPlaying ? (
+        <div className="absolute inset-0 flex flex-col items-center justify-center bg-gray-900 z-20 overflow-hidden group cursor-pointer" onClick={() => setIsPlaying(true)}>
+          <div className="absolute inset-0 bg-gray-900">
+            <img
+              src="https://m.media-amazon.com/images/I/81CaNyaWp2L.png"
+              alt="Escape Road Thumbnail"
+              className="w-full h-full object-cover opacity-60 group-hover:opacity-100 transition-opacity duration-700 hover:scale-105 transform"
+              onError={(e) => {
+                e.target.style.display = 'none';
+              }}
+            />
+            <div className="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition-colors duration-500"></div>
+          </div>
 
-               <div className="relative z-10 flex flex-col items-center gap-6 mt-20">
-                   <div className="text-center space-y-2">
-                       <h2 className="text-5xl font-black text-white italic tracking-tighter drop-shadow-[0_5px_5px_rgba(0,0,0,0.8)] stroke-black">
-                           ESCAPE <span className="text-red-500">ROAD</span>
-                       </h2>
-                       <div className="flex items-center justify-center gap-2 text-yellow-400 font-bold tracking-widest text-xs uppercase bg-black/50 px-3 py-1 rounded-full backdrop-blur-sm border border-white/10">
-                           <Siren size={14} className="text-red-500 animate-bounce" />
-                           Wanted Level: ✯✯✯✯✯
-                           <Siren size={14} className="text-blue-500 animate-bounce" />
-                       </div>
-                   </div>
+          <div className="relative z-10 flex flex-col items-center gap-6 mt-20">
+            <div className="text-center space-y-2">
+              <h2 className="text-5xl font-black text-white italic tracking-tighter drop-shadow-[0_5px_5px_rgba(0,0,0,0.8)] stroke-black">
+                ESCAPE <span className="text-red-500">ROAD</span>
+              </h2>
+              <div className="flex items-center justify-center gap-2 text-yellow-400 font-bold tracking-widest text-xs uppercase bg-black/50 px-3 py-1 rounded-full backdrop-blur-sm border border-white/10">
+                <Siren size={14} className="text-red-500 animate-bounce" />
+                Wanted Level: ✯✯✯✯✯
+                <Siren size={14} className="text-blue-500 animate-bounce" />
+              </div>
+            </div>
 
-                   <motion.button
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
-                        className="mt-12 px-8 py-3 bg-gradient-to-r from-red-600 to-orange-600 text-white font-black text-xl italic rounded-full shadow-[0_0_20px_rgba(239,68,68,0.6)] flex items-center gap-2 border-2 border-white/20 group-hover:shadow-[0_0_40px_rgba(239,68,68,0.8)] transition-all"
-                   >
-                        <Play size={24} fill="currentColor" />
-                        PLAY NOW
-                   </motion.button>
-               </div>
-           </div>
-       ) : (
-           <>
-               {loading && (
-                 <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-0">
-                    <div className="w-10 h-10 border-4 border-gray-600 border-t-white rounded-full animate-spin"></div>
-                 </div>
-               )}
-               {/* Native width/height replaces the heavy JavaScript ResizeObserver scaling loop to fix lag */}
-               <iframe 
-                   src="https://raw.githack.com/abisdbest/classroom.google.com/85146ac051b67a3c32ebdf898bb0144d818d580b/drive.google.com/escape%20road/index.html"
-                   className="w-full h-full block border-none absolute inset-0"
-                   onLoad={() => setLoading(false)}
-                   allowFullScreen
-                   scrolling="no"
-               />
-           </>
-       )}
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              className="mt-12 px-8 py-3 bg-gradient-to-r from-red-600 to-orange-600 text-white font-black text-xl italic rounded-full shadow-[0_0_20px_rgba(239,68,68,0.6)] flex items-center gap-2 border-2 border-white/20 group-hover:shadow-[0_0_40px_rgba(239,68,68,0.8)] transition-all"
+            >
+              <Play size={24} fill="currentColor" />
+              PLAY NOW
+            </motion.button>
+          </div>
+        </div>
+      ) : (
+        <>
+          {loading && (
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-0">
+              <div className="w-10 h-10 border-4 border-gray-600 border-t-white rounded-full animate-spin"></div>
+            </div>
+          )}
+          {/* HD Scaled iframe replacing the blurry static one */}
+          <iframe
+            ref={iframeRef}
+            src="https://raw.githack.com/abisdbest/classroom.google.com/85146ac051b67a3c32ebdf898bb0144d818d580b/drive.google.com/escape%20road/index.html"
+            className="absolute top-0 left-0 border-none"
+            style={{ width: '100%', height: '100%' }}
+            onLoad={() => setLoading(false)}
+            allowFullScreen
+            scrolling="no"
+          />
+        </>
+      )}
     </div>
   );
 };
 
 // --- Splash Screen Component ---
 const SplashScreen = () => {
-    const iconRef = useRef(null);
+  const iconRef = useRef(null);
 
-    useEffect(() => {
-        const timer = setTimeout(() => {
-            if (iconRef.current) {
-                iconRef.current.startAnimation();
-            }
-        }, 300);
-        return () => clearTimeout(timer);
-    }, []);
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (iconRef.current) {
+        iconRef.current.startAnimation();
+      }
+    }, 300);
+    return () => clearTimeout(timer);
+  }, []);
 
-    return (
+  return (
     <motion.div
-        key="splash"
-        initial={{ opacity: 1 }}
-        exit={{ opacity: 0, scale: 1.1, filter: "blur(10px)" }}
-        transition={{ duration: 0.8, ease: "easeInOut" }}
-        className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-gray-950 text-white overflow-hidden h-[100dvh]"
+      key="splash"
+      initial={{ opacity: 1 }}
+      exit={{ opacity: 0, scale: 1.1, filter: "blur(10px)" }}
+      transition={{ duration: 0.8, ease: "easeInOut" }}
+      className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-gray-950 text-white overflow-hidden h-[100dvh]"
     >
-        <div className="absolute inset-0 overflow-hidden pointer-events-none">
-            <motion.div 
-                animate={{ 
-                    scale: [1, 1.2, 1],
-                    opacity: [0.3, 0.5, 0.3], 
-                    rotate: [0, 90, 0]
-                }}
-                transition={{ duration: 10, repeat: Infinity, ease: "linear" }}
-                className="absolute -top-1/2 -left-1/2 w-full h-full bg-emerald-500/20 blur-[120px] rounded-full" 
-                style={{ willChange: "transform, opacity" }}
-            />
-            <motion.div 
-                animate={{ 
-                    scale: [1, 1.5, 1],
-                    opacity: [0.2, 0.4, 0.2],
-                    rotate: [0, -45, 0]
-                }}
-                transition={{ duration: 15, repeat: Infinity, ease: "linear" }}
-                className="absolute -bottom-1/2 -right-1/2 w-full h-full bg-yellow-500/10 blur-[120px] rounded-full" 
-                style={{ willChange: "transform, opacity" }}
-            />
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <motion.div
+          animate={{
+            scale: [1, 1.2, 1],
+            opacity: [0.3, 0.5, 0.3],
+            rotate: [0, 90, 0]
+          }}
+          transition={{ duration: 10, repeat: Infinity, ease: "linear" }}
+          className="absolute -top-1/2 -left-1/2 w-full h-full bg-emerald-500/20 blur-[120px] rounded-full"
+          style={{ willChange: "transform, opacity" }}
+        />
+        <motion.div
+          animate={{
+            scale: [1, 1.5, 1],
+            opacity: [0.2, 0.4, 0.2],
+            rotate: [0, -45, 0]
+          }}
+          transition={{ duration: 15, repeat: Infinity, ease: "linear" }}
+          className="absolute -bottom-1/2 -right-1/2 w-full h-full bg-yellow-500/10 blur-[120px] rounded-full"
+          style={{ willChange: "transform, opacity" }}
+        />
+      </div>
+
+      <motion.div
+        initial={{ opacity: 0, scale: 0.8 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.8, ease: "easeOut" }}
+        className="relative z-10 flex flex-col items-center"
+      >
+        <div className="relative mb-8">
+          <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/30 to-teal-500/30 blur-[40px] rounded-full animate-pulse" />
+          <div className="relative flex items-center justify-center w-28 h-28 bg-gray-900/40 backdrop-blur-2xl border border-white/10 rounded-[32px] shadow-2xl overflow-hidden">
+            <div className="relative w-full h-full flex items-center justify-center">
+              <ChartColumnIncreasingIcon
+                ref={iconRef}
+                size={56}
+                className="text-emerald-400 drop-shadow-[0_0_15px_rgba(52,211,153,0.5)]"
+              />
+            </div>
+          </div>
         </div>
 
-        <motion.div 
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.8, ease: "easeOut" }}
-            className="relative z-10 flex flex-col items-center"
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3, duration: 0.8 }}
+          className="text-center"
         >
-            <div className="relative mb-8">
-                <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/30 to-teal-500/30 blur-[40px] rounded-full animate-pulse" />
-                <div className="relative flex items-center justify-center w-28 h-28 bg-gray-900/40 backdrop-blur-2xl border border-white/10 rounded-[32px] shadow-2xl overflow-hidden">
-                    <div className="relative w-full h-full flex items-center justify-center">
-                        <ChartColumnIncreasingIcon 
-                            ref={iconRef}
-                            size={56} 
-                            className="text-emerald-400 drop-shadow-[0_0_15px_rgba(52,211,153,0.5)]" 
-                        />
-                    </div>
-                </div>
-            </div>
-            
-            <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.3, duration: 0.8 }}
-                className="text-center"
-            >
-                <h1 className="text-4xl font-black tracking-tight mb-3 bg-gradient-to-br from-white via-gray-100 to-gray-400 bg-clip-text text-transparent">
-                    In<span className="text-emerald-400">vers</span>
-                </h1>
-                <p className="text-gray-400 text-xs tracking-[0.3em] uppercase font-medium">Wealth Visualized</p>
-            </motion.div>
+          <h1 className="text-4xl font-black tracking-tight mb-3 bg-gradient-to-br from-white via-gray-100 to-gray-400 bg-clip-text text-transparent">
+            In<span className="text-emerald-400">vers</span>
+          </h1>
+          <p className="text-gray-400 text-xs tracking-[0.3em] uppercase font-medium">Wealth Visualized</p>
         </motion.div>
+      </motion.div>
 
-        <motion.div 
-            initial={{ width: 0, opacity: 0 }}
-            animate={{ width: 160, opacity: 1 }}
-            transition={{ delay: 0.5, duration: 7 }} 
-            className="absolute bottom-24 h-1 bg-gray-800 rounded-full overflow-hidden"
-        >
-            <motion.div 
-                animate={{ x: [-160, 160] }}
-                transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
-                className="h-full w-1/2 bg-gradient-to-r from-emerald-500 to-teal-400 blur-sm"
-            />
-        </motion.div>
+      <motion.div
+        initial={{ width: 0, opacity: 0 }}
+        animate={{ width: 160, opacity: 1 }}
+        transition={{ delay: 0.5, duration: 7 }}
+        className="absolute bottom-24 h-1 bg-gray-800 rounded-full overflow-hidden"
+      >
+        <motion.div
+          animate={{ x: [-160, 160] }}
+          transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
+          className="h-full w-1/2 bg-gradient-to-r from-emerald-500 to-teal-400 blur-sm"
+        />
+      </motion.div>
     </motion.div>
-    );
+  );
 };
 
 // --- Main App Component ---
@@ -804,40 +831,40 @@ export default function App() {
   // --- State ---
   const [view, setView] = useState('dashboard');
   const [darkMode, setDarkMode] = useState(false);
-  const [showSplash, setShowSplash] = useState(true); 
+  const [showSplash, setShowSplash] = useState(true);
   const [colorTheme, setColorTheme] = useState('green');
   const [prices, setPrices] = useState({ btc: 8500000, gold: 7200 });
-  const [investments, setInvestments] = useState({}); 
-  const [monthlyData, setMonthlyData] = useState({}); 
+  const [investments, setInvestments] = useState({});
+  const [monthlyData, setMonthlyData] = useState({});
   const [profile, setProfile] = useState({ name: 'San • dept', image: null });
-  
-  const [selectedMonth, setSelectedMonth] = useState(0); 
+
+  const [selectedMonth, setSelectedMonth] = useState(0);
   const [selectedYear, setSelectedYear] = useState(2026); // Added Year State
-  
+
   const [saveStatus, setSaveStatus] = useState('');
-  
+
   // Notification State
   const [notificationsEnabled, setNotificationsEnabled] = useState(false);
   const [notificationTime, setNotificationTime] = useState('09:00');
-  const [notificationStatus, setNotificationStatus] = useState(''); 
+  const [notificationStatus, setNotificationStatus] = useState('');
   const lastNotificationDate = useRef(null);
-  
+
   // Audio Context Ref
   const audioCtxRef = useRef(null);
 
   // Function to unlock audio on first interaction
   const unlockAudio = () => {
-      try {
-          if (!audioCtxRef.current) {
-              const AudioContext = window.AudioContext || window.webkitAudioContext;
-              audioCtxRef.current = new AudioContext();
-          }
-          if (audioCtxRef.current.state === 'suspended') {
-              audioCtxRef.current.resume();
-          }
-      } catch (e) {
-          console.log("Audio unlock failed (user gesture required)", e);
+    try {
+      if (!audioCtxRef.current) {
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        audioCtxRef.current = new AudioContext();
       }
+      if (audioCtxRef.current.state === 'suspended') {
+        audioCtxRef.current.resume();
+      }
+    } catch (e) {
+      console.log("Audio unlock failed (user gesture required)", e);
+    }
   };
 
   // Swipe Gesture State
@@ -850,13 +877,13 @@ export default function App() {
 
   useEffect(() => {
     const timer = setTimeout(() => {
-        setShowSplash(false);
-    }, 8000); 
+      setShowSplash(false);
+    }, 8000);
     return () => clearTimeout(timer);
   }, []);
 
   useEffect(() => {
-    const savedData = localStorage.getItem('investmentApp_v4'); 
+    const savedData = localStorage.getItem('investmentApp_v4');
     if (savedData) {
       const parsed = JSON.parse(savedData);
       setInvestments(parsed.investments || {});
@@ -868,6 +895,12 @@ export default function App() {
       setNotificationsEnabled(parsed.notificationsEnabled || false);
       setNotificationTime(parsed.notificationTime || '09:00');
       if (parsed.selectedYear) setSelectedYear(parsed.selectedYear);
+    }
+
+    // Load the last notification date to prevent immediate re-firing on refresh
+    const lastNotif = localStorage.getItem('investmentApp_lastNotif');
+    if (lastNotif) {
+      lastNotificationDate.current = lastNotif;
     }
   }, []);
 
@@ -900,40 +933,43 @@ export default function App() {
 
   // Updated Notification Logic
   const triggerNotification = (message) => {
-    
+
     // 2. Vibration (Critical for mobile feedback)
     if ("vibrate" in navigator) {
-        try {
-            navigator.vibrate([200, 100, 200]);
-        } catch(e) {
-            console.log("Vibration not supported");
-        }
+      try {
+        navigator.vibrate([200, 100, 200]);
+      } catch (e) {
+        console.log("Vibration not supported");
+      }
     }
-    
+
     // 3. Play Sound via Web Audio API
     try {
-        if (audioCtxRef.current) {
-            const ctx = audioCtxRef.current;
-            if (ctx.state === 'suspended') ctx.resume();
-            const osc = ctx.createOscillator();
-            const gain = ctx.createGain();
-            
-            osc.type = 'sine';
-            osc.frequency.setValueAtTime(880, ctx.currentTime);
-            osc.frequency.exponentialRampToValueAtTime(1760, ctx.currentTime + 0.1);
-            
-            gain.gain.setValueAtTime(0, ctx.currentTime);
-            gain.gain.linearRampToValueAtTime(0.2, ctx.currentTime + 0.02);
-            gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3);
-            
-            osc.connect(gain);
-            gain.connect(ctx.destination);
-            
-            osc.start(ctx.currentTime);
-            osc.stop(ctx.currentTime + 0.3);
-        }
-    } catch(e) {
-        console.log("Audio play blocked", e);
+      if (!audioCtxRef.current) {
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        audioCtxRef.current = new AudioContext();
+      }
+      const ctx = audioCtxRef.current;
+      if (ctx.state === 'suspended') ctx.resume();
+
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(880, ctx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(1760, ctx.currentTime + 0.1);
+
+      gain.gain.setValueAtTime(0, ctx.currentTime);
+      gain.gain.linearRampToValueAtTime(0.2, ctx.currentTime + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3);
+
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+
+      osc.start(ctx.currentTime);
+      osc.stop(ctx.currentTime + 0.3);
+    } catch (e) {
+      console.log("Audio play blocked", e);
     }
 
     // 4. Try Native Notification
@@ -941,17 +977,17 @@ export default function App() {
       try {
         const notif = new Notification("Invers Wealth", {
           body: message,
-          icon: "https://cdn-icons-png.flaticon.com/512/1041/1041888.png", 
+          icon: "https://cdn-icons-png.flaticon.com/512/1041/1041888.png",
           badge: "https://cdn-icons-png.flaticon.com/512/1041/1041888.png",
           vibrate: [200, 100, 200],
           tag: 'invers-reminder',
           renotify: true,
-          requireInteraction: true 
+          requireInteraction: true
         });
-        
-        notif.onclick = function() {
-            window.focus();
-            this.close();
+
+        notif.onclick = function () {
+          window.focus();
+          this.close();
         };
       } catch (e) {
         console.log("Native notification blocked by environment");
@@ -963,18 +999,32 @@ export default function App() {
     if (!notificationsEnabled) return;
 
     const checkTime = () => {
-        const now = new Date();
-        const currentTimeString = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
-        const todayDateString = now.toDateString();
+      const now = new Date();
+      const todayDateString = now.toDateString();
 
-        if (currentTimeString === notificationTime && lastNotificationDate.current !== todayDateString) {
-            triggerNotification("Time to track your daily investments! 🚀");
-            lastNotificationDate.current = todayDateString;
-        }
+      // Prevent notifying multiple times in the same day
+      if (lastNotificationDate.current === todayDateString) return;
+
+      const [targetHour, targetMinute] = notificationTime.split(':').map(Number);
+      const currentHour = now.getHours();
+      const currentMinute = now.getMinutes();
+
+      // Robust check: Trigger if current time is equal to OR past the target time.
+      // This ensures if the browser sleeps at exactly 09:00, you still get notified at 09:01 or when it wakes up.
+      const isPastTargetTime = currentHour > targetHour || (currentHour === targetHour && currentMinute >= targetMinute);
+
+      if (isPastTargetTime) {
+        triggerNotification("Time to track your daily investments! 🚀");
+        lastNotificationDate.current = todayDateString;
+        localStorage.setItem('investmentApp_lastNotif', todayDateString);
+      }
     };
 
-    // Check more frequently (every 5 seconds) to ensure we catch the minute change
-    const interval = setInterval(checkTime, 5000);
+    // Check immediately on mount/update
+    checkTime();
+
+    // Check periodically (every 30 seconds)
+    const interval = setInterval(checkTime, 30000);
     return () => clearInterval(interval);
   }, [notificationsEnabled, notificationTime]);
 
@@ -987,8 +1037,8 @@ export default function App() {
 
   useEffect(() => {
     if (notificationStatus) {
-        const timer = setTimeout(() => setNotificationStatus(''), 3000);
-        return () => clearTimeout(timer);
+      const timer = setTimeout(() => setNotificationStatus(''), 3000);
+      return () => clearTimeout(timer);
     }
   }, [notificationStatus]);
 
@@ -1040,7 +1090,7 @@ export default function App() {
       ...prev,
       [monthKey]: {
         ...(prev[monthKey] || (selectedYear === 2026 ? prev[selectedMonth] : {})),
-        isSaved: true 
+        isSaved: true
       }
     }));
     setSaveStatus('saved');
@@ -1062,27 +1112,28 @@ export default function App() {
   };
 
   const handleSaveNotificationTime = () => {
-      if (!notificationsEnabled) return;
-      
-      // Request permission
-      if (Notification.permission !== "granted" && Notification.permission !== "denied") {
-          Notification.requestPermission();
-      }
-      
-      // Reset tracker so user can test the new time immediately if it matches current time
-      lastNotificationDate.current = null;
-      
-      setNotificationStatus('saved');
+    if (!notificationsEnabled) return;
+
+    // Request permission
+    if (Notification.permission !== "granted" && Notification.permission !== "denied") {
+      Notification.requestPermission();
+    }
+
+    // Reset tracker so user can test the new time immediately if it matches current time
+    lastNotificationDate.current = null;
+
+    setNotificationStatus('saved');
   };
 
   const handleTestNotification = async () => {
-      unlockAudio(); // Unlock audio on test click
-      // Always request permission on user interaction if not granted
-      if (Notification.permission !== "granted" && Notification.permission !== "denied") {
-          await Notification.requestPermission();
-      }
-      
-      triggerNotification("This is how your reminder will look! 🔔");
+    unlockAudio(); // Unlock audio context on interaction
+
+    // Always request permission on user interaction if not granted
+    if (Notification.permission !== "granted" && Notification.permission !== "denied") {
+      await Notification.requestPermission();
+    }
+
+    triggerNotification("This is how your reminder will look! 🔔");
   };
 
   // --- Swipe Gesture Handlers ---
@@ -1102,16 +1153,16 @@ export default function App() {
     const isRightSwipe = distance < -minSwipeDistance;
 
     if (isLeftSwipe || isRightSwipe) {
-        const currentIndex = VIEWS.indexOf(view);
-        if (isLeftSwipe) {
-            if (currentIndex < VIEWS.length - 1) {
-                setView(VIEWS[currentIndex + 1]);
-            }
-        } else {
-            if (currentIndex > 0) {
-                setView(VIEWS[currentIndex - 1]);
-            }
+      const currentIndex = VIEWS.indexOf(view);
+      if (isLeftSwipe) {
+        if (currentIndex < VIEWS.length - 1) {
+          setView(VIEWS[currentIndex + 1]);
         }
+      } else {
+        if (currentIndex > 0) {
+          setView(VIEWS[currentIndex - 1]);
+        }
+      }
     }
   };
 
@@ -1122,34 +1173,34 @@ export default function App() {
       {/* Header Profile & Summary */}
       <div className="flex justify-between items-start mb-4 px-2">
         <div className="flex flex-col gap-4 items-start">
-            {/* Profile Image with Upload Trigger */}
-            <div className="relative group w-28 h-28">
-                <div className="w-28 h-28 rounded-full overflow-hidden border-4 border-white shadow-xl dark:border-gray-700 bg-gray-200 dark:bg-gray-800">
-                    {profile.image ? (
-                        <img src={profile.image} alt="Profile" className="w-full h-full object-cover" />
-                    ) : (
-                        <div className="w-full h-full flex items-center justify-center text-gray-400">
-                            <User size={48} />
-                        </div>
-                    )}
+          {/* Profile Image with Upload Trigger */}
+          <div className="relative group w-28 h-28">
+            <div className="w-28 h-28 rounded-full overflow-hidden border-4 border-white shadow-xl dark:border-gray-700 bg-gray-200 dark:bg-gray-800">
+              {profile.image ? (
+                <img src={profile.image} alt="Profile" className="w-full h-full object-cover" />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center text-gray-400">
+                  <User size={48} />
                 </div>
-                <label className={`absolute bottom-1 right-1 p-2 rounded-full shadow-lg cursor-pointer hover:scale-110 transition-transform bg-white dark:bg-gray-800 ${currentTheme.text}`}>
-                    <Camera size={18} />
-                    <input type="file" accept="image/*" className="hidden" onChange={handleImageUpload} />
-                </label>
+              )}
             </div>
-            
-            {/* Editable Name */}
-            <div className="text-left">
-                <input 
-                    type="text" 
-                    value={profile.name}
-                    onChange={(e) => setProfile(prev => ({ ...prev, name: e.target.value }))}
-                    className="bg-transparent border-none p-0 text-2xl font-black text-gray-900 dark:text-white w-56 focus:ring-0 placeholder-gray-400 outline-none text-left tracking-tight"
-                    placeholder="Enter Name"
-                />
-                <p className="text-xs text-gray-500 dark:text-gray-400 font-bold text-left uppercase tracking-wide">Portfolio Owner</p>
-            </div>
+            <label className={`absolute bottom-1 right-1 p-2 rounded-full shadow-lg cursor-pointer hover:scale-110 transition-transform bg-white dark:bg-gray-800 ${currentTheme.text}`}>
+              <Camera size={18} />
+              <input type="file" accept="image/*" className="hidden" onChange={handleImageUpload} />
+            </label>
+          </div>
+
+          {/* Editable Name */}
+          <div className="text-left">
+            <input
+              type="text"
+              value={profile.name}
+              onChange={(e) => setProfile(prev => ({ ...prev, name: e.target.value }))}
+              className="bg-transparent border-none p-0 text-2xl font-black text-gray-900 dark:text-white w-56 focus:ring-0 placeholder-gray-400 outline-none text-left tracking-tight"
+              placeholder="Enter Name"
+            />
+            <p className="text-xs text-gray-500 dark:text-gray-400 font-bold text-left uppercase tracking-wide">Portfolio Owner</p>
+          </div>
         </div>
 
         <div className="text-right pt-4">
@@ -1209,7 +1260,7 @@ export default function App() {
       <Card>
         <h3 className="text-base font-bold mb-3 text-gray-900 dark:text-white">Investment Progress</h3>
         <div className="space-y-5">
-          
+
           {/* BTC Progress */}
           <div>
             <div className="flex justify-between text-xs mb-1.5">
@@ -1217,8 +1268,8 @@ export default function App() {
               <span className="font-bold text-gray-900 dark:text-white">{formatCurrency(stats.btcInvested)}</span>
             </div>
             <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2.5 overflow-hidden">
-              <div 
-                className="bg-gradient-to-r from-orange-400 to-orange-600 h-2.5 rounded-full transition-all duration-1000 ease-out" 
+              <div
+                className="bg-gradient-to-r from-orange-400 to-orange-600 h-2.5 rounded-full transition-all duration-1000 ease-out"
                 style={{ width: `${Math.min((stats.totalDays / 365) * 100, 100)}%` }}
               ></div>
             </div>
@@ -1232,8 +1283,8 @@ export default function App() {
               <span className="font-bold text-gray-900 dark:text-white">{formatCurrency(stats.goldInvested)}</span>
             </div>
             <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2.5 overflow-hidden">
-              <div 
-                className="bg-gradient-to-r from-yellow-400 to-yellow-600 h-2.5 rounded-full transition-all duration-1000 ease-out" 
+              <div
+                className="bg-gradient-to-r from-yellow-400 to-yellow-600 h-2.5 rounded-full transition-all duration-1000 ease-out"
                 style={{ width: `${Math.min((stats.totalDays / 365) * 100, 100)}%` }}
               ></div>
             </div>
@@ -1249,176 +1300,176 @@ export default function App() {
     const monthKey = `${selectedYear}-${selectedMonth}`;
     const currentMonthData = monthlyData[monthKey] || (selectedYear === 2026 ? monthlyData[selectedMonth] : undefined) || {};
     const isLocked = currentMonthData.isSaved;
-    
+
     const firstDayIndex = new Date(selectedYear, selectedMonth, 1).getDay();
     const daysInMonth = DAYS_IN_MONTH(selectedMonth, selectedYear);
 
     return (
-    <div className="animate-fade-in flex flex-col pb-24 text-gray-900 dark:text-white">
-      <div className="flex items-center justify-between mb-4 px-1">
-        <div className="flex items-center gap-2">
+      <div className="animate-fade-in flex flex-col pb-24 text-gray-900 dark:text-white">
+        <div className="flex items-center justify-between mb-4 px-1">
+          <div className="flex items-center gap-2">
             <h2 className="text-xl font-black text-gray-900 dark:text-white tracking-tight">
-                {MONTHS[selectedMonth]}
+              {MONTHS[selectedMonth]}
             </h2>
             <div className="relative flex items-center">
-                <select 
-                    value={selectedYear}
-                    onChange={(e) => setSelectedYear(Number(e.target.value))}
-                    className="appearance-none bg-transparent text-xl font-black text-gray-400 outline-none cursor-pointer pr-4 hover:text-gray-500 transition-colors"
-                >
-                    {Array.from({ length: 2100 - 2026 + 1 }, (_, i) => 2026 + i).map(y => (
-                        <option key={y} value={y} className="text-base text-gray-900 dark:bg-gray-800 dark:text-white">
-                            {y}
-                        </option>
-                    ))}
-                </select>
-                <ChevronRight className="absolute right-0 text-gray-400 pointer-events-none rotate-90" size={14} />
+              <select
+                value={selectedYear}
+                onChange={(e) => setSelectedYear(Number(e.target.value))}
+                className="appearance-none bg-transparent text-xl font-black text-gray-400 outline-none cursor-pointer pr-4 hover:text-gray-500 transition-colors"
+              >
+                {Array.from({ length: 2100 - 2026 + 1 }, (_, i) => 2026 + i).map(y => (
+                  <option key={y} value={y} className="text-base text-gray-900 dark:bg-gray-800 dark:text-white">
+                    {y}
+                  </option>
+                ))}
+              </select>
+              <ChevronRight className="absolute right-0 text-gray-400 pointer-events-none rotate-90" size={14} />
             </div>
-        </div>
-        <div className="flex items-center gap-1">
-            <button 
-                onClick={() => {
-                    if (selectedMonth === 0) {
-                        setSelectedMonth(11);
-                        setSelectedYear(prev => Math.max(2026, prev - 1));
-                    } else {
-                        setSelectedMonth(prev => prev - 1);
-                    }
-                }}
-                className="p-1.5 rounded-full hover:bg-gray-100 dark:hover:bg-white/10 active:scale-95 transition-transform"
-                disabled={selectedMonth === 0 && selectedYear === 2026}
-            >
-                <ChevronLeft size={20} className={selectedMonth === 0 && selectedYear === 2026 ? "text-gray-300 dark:text-gray-600" : "text-gray-900 dark:text-white"} />
-            </button>
-            <button 
-                onClick={() => {
-                    if (selectedMonth === 11) {
-                        setSelectedMonth(0);
-                        setSelectedYear(prev => Math.min(2100, prev + 1));
-                    } else {
-                        setSelectedMonth(prev => prev + 1);
-                    }
-                }}
-                className="p-1.5 rounded-full hover:bg-gray-100 dark:hover:bg-white/10 active:scale-95 transition-transform"
-                disabled={selectedMonth === 11 && selectedYear === 2100}
-            >
-                <ChevronRight size={20} className={selectedMonth === 11 && selectedYear === 2100 ? "text-gray-300 dark:text-gray-600" : "text-gray-900 dark:text-white"} />
-            </button>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-7 gap-1 mb-2 px-1">
-        {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((day, i) => (
-          <div key={i} className="text-center text-[10px] font-bold text-gray-400">{day}</div>
-        ))}
-      </div>
-
-      <div className="grid grid-cols-7 gap-1.5 mb-6">
-        {Array.from({ length: firstDayIndex }).map((_, i) => (
-            <div key={`empty-${i}`} />
-        ))}
-        
-        {Array.from({ length: daysInMonth }).map((_, i) => {
-          // Compatibility logic for legacy 2026 keys without year prefix
-          const isLegacyChecked = selectedYear === 2026 && investments[`${selectedMonth}-${i + 1}`];
-          const isChecked = investments[`${selectedYear}-${selectedMonth}-${i + 1}`] || isLegacyChecked;
-
-          return (
+          </div>
+          <div className="flex items-center gap-1">
             <button
-              key={i}
-              onClick={() => toggleDay(i + 1)}
-              className={`
+              onClick={() => {
+                if (selectedMonth === 0) {
+                  setSelectedMonth(11);
+                  setSelectedYear(prev => Math.max(2026, prev - 1));
+                } else {
+                  setSelectedMonth(prev => prev - 1);
+                }
+              }}
+              className="p-1.5 rounded-full hover:bg-gray-100 dark:hover:bg-white/10 active:scale-95 transition-transform"
+              disabled={selectedMonth === 0 && selectedYear === 2026}
+            >
+              <ChevronLeft size={20} className={selectedMonth === 0 && selectedYear === 2026 ? "text-gray-300 dark:text-gray-600" : "text-gray-900 dark:text-white"} />
+            </button>
+            <button
+              onClick={() => {
+                if (selectedMonth === 11) {
+                  setSelectedMonth(0);
+                  setSelectedYear(prev => Math.min(2100, prev + 1));
+                } else {
+                  setSelectedMonth(prev => prev + 1);
+                }
+              }}
+              className="p-1.5 rounded-full hover:bg-gray-100 dark:hover:bg-white/10 active:scale-95 transition-transform"
+              disabled={selectedMonth === 11 && selectedYear === 2100}
+            >
+              <ChevronRight size={20} className={selectedMonth === 11 && selectedYear === 2100 ? "text-gray-300 dark:text-gray-600" : "text-gray-900 dark:text-white"} />
+            </button>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-7 gap-1 mb-2 px-1">
+          {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((day, i) => (
+            <div key={i} className="text-center text-[10px] font-bold text-gray-400">{day}</div>
+          ))}
+        </div>
+
+        <div className="grid grid-cols-7 gap-1.5 mb-6">
+          {Array.from({ length: firstDayIndex }).map((_, i) => (
+            <div key={`empty-${i}`} />
+          ))}
+
+          {Array.from({ length: daysInMonth }).map((_, i) => {
+            // Compatibility logic for legacy 2026 keys without year prefix
+            const isLegacyChecked = selectedYear === 2026 && investments[`${selectedMonth}-${i + 1}`];
+            const isChecked = investments[`${selectedYear}-${selectedMonth}-${i + 1}`] || isLegacyChecked;
+
+            return (
+              <button
+                key={i}
+                onClick={() => toggleDay(i + 1)}
+                className={`
                 relative aspect-square rounded-lg flex flex-col items-center justify-center transition-all duration-200
                 border shadow-sm
-                ${isChecked 
-                  ? `${currentTheme.primary} ${currentTheme.border} text-white ${currentTheme.shadow} transform scale-95` 
-                  : 'bg-white dark:bg-gray-800 border-gray-100 dark:border-gray-700 text-gray-600 dark:text-gray-300 hover:shadow-md'
-                }
+                ${isChecked
+                    ? `${currentTheme.primary} ${currentTheme.border} text-white ${currentTheme.shadow} transform scale-95`
+                    : 'bg-white dark:bg-gray-800 border-gray-100 dark:border-gray-700 text-gray-600 dark:text-gray-300 hover:shadow-md'
+                  }
               `}
-            >
-              <span className="text-xs font-bold">{i + 1}</span>
-              {isChecked && (
-                <CheckCircle2 size={12} className="mt-0.5 animate-bounce-short" />
-              )}
-            </button>
-          );
-        })}
-      </div>
-      
-      <Card className="animate-fade-in relative transition-all duration-500">
-        <div className="flex items-center gap-2 mb-3">
-          <FileText size={16} className={currentTheme.text} />
-          <h3 className="font-bold text-sm text-gray-900 dark:text-white">Monthly Report</h3>
-          {isLocked && <Lock size={12} className="text-gray-400 ml-auto" />}
+              >
+                <span className="text-xs font-bold">{i + 1}</span>
+                {isChecked && (
+                  <CheckCircle2 size={12} className="mt-0.5 animate-bounce-short" />
+                )}
+              </button>
+            );
+          })}
         </div>
-        
-        {isLocked ? (
+
+        <Card className="animate-fade-in relative transition-all duration-500">
+          <div className="flex items-center gap-2 mb-3">
+            <FileText size={16} className={currentTheme.text} />
+            <h3 className="font-bold text-sm text-gray-900 dark:text-white">Monthly Report</h3>
+            {isLocked && <Lock size={12} className="text-gray-400 ml-auto" />}
+          </div>
+
+          {isLocked ? (
             <div className="flex flex-col items-center justify-center py-4 text-center animate-fade-in">
-                <div className="bg-gray-100 dark:bg-gray-800 p-3 rounded-full mb-2">
-                    <CheckCircle2 size={24} className={currentTheme.text} />
-                </div>
-                <h4 className="text-lg font-bold text-gray-900 dark:text-white">Month Ended</h4>
-                <p className="text-xs text-gray-500 mt-0.5">Report Saved.</p>
+              <div className="bg-gray-100 dark:bg-gray-800 p-3 rounded-full mb-2">
+                <CheckCircle2 size={24} className={currentTheme.text} />
+              </div>
+              <h4 className="text-lg font-bold text-gray-900 dark:text-white">Month Ended</h4>
+              <p className="text-xs text-gray-500 mt-0.5">Report Saved.</p>
             </div>
-        ) : (
+          ) : (
             <>
-                <div className="flex gap-3 mb-3">
-                  <div className="flex-1 space-y-1">
-                    <label className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 ml-1">Profit</label>
-                    <div className="relative">
-                      <span className="absolute left-3 top-2 font-bold text-emerald-600 text-sm">₹</span>
-                      <input 
-                        type="number" 
-                        placeholder="0"
-                        className="w-full border rounded-xl pl-6 pr-2 py-1.5 font-bold outline-none transition-all bg-emerald-5 dark:bg-emerald-900/20 border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300 focus:ring-2 focus:ring-emerald-500 text-sm"
-                        value={currentMonthData.profit || ''}
-                        onChange={(e) => updateMonthData('profit', e.target.value)}
-                      />
-                    </div>
-                  </div>
-                  <div className="flex-1 space-y-1">
-                    <label className="text-[10px] font-bold text-rose-600 dark:text-rose-400 ml-1">Loss</label>
-                      <div className="relative">
-                      <span className="absolute left-3 top-2 font-bold text-rose-600 text-sm">₹</span>
-                      <input 
-                        type="number" 
-                        placeholder="0"
-                        className="w-full border rounded-xl pl-6 pr-2 py-1.5 font-bold outline-none transition-all bg-rose-5 dark:bg-rose-900/20 border-rose-200 dark:border-rose-800 text-rose-700 dark:text-rose-300 focus:ring-2 focus:ring-rose-500 text-sm"
-                        value={currentMonthData.loss || ''}
-                        onChange={(e) => updateMonthData('loss', e.target.value)}
-                      />
-                      </div>
+              <div className="flex gap-3 mb-3">
+                <div className="flex-1 space-y-1">
+                  <label className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 ml-1">Profit</label>
+                  <div className="relative">
+                    <span className="absolute left-3 top-2 font-bold text-emerald-600 text-sm">₹</span>
+                    <input
+                      type="number"
+                      placeholder="0"
+                      className="w-full border rounded-xl pl-6 pr-2 py-1.5 font-bold outline-none transition-all bg-emerald-5 dark:bg-emerald-900/20 border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300 focus:ring-2 focus:ring-emerald-500 text-sm"
+                      value={currentMonthData.profit || ''}
+                      onChange={(e) => updateMonthData('profit', e.target.value)}
+                    />
                   </div>
                 </div>
-
-                <div className="space-y-1 mb-3">
-                  <label className="text-[10px] font-bold text-gray-400 ml-1">Note : </label>
-                  <textarea 
-                    placeholder={`Notes for ${MONTHS[selectedMonth]}...`}
-                    className="w-full border rounded-xl px-3 py-2 text-xs font-medium outline-none resize-none h-20 bg-gray-50 dark:bg-gray-900/40 border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 focus:ring-2 focus:ring-gray-400"
-                    value={currentMonthData.note || ''}
-                    onChange={(e) => updateMonthData('note', e.target.value)}
-                  />
+                <div className="flex-1 space-y-1">
+                  <label className="text-[10px] font-bold text-rose-600 dark:text-rose-400 ml-1">Loss</label>
+                  <div className="relative">
+                    <span className="absolute left-3 top-2 font-bold text-rose-600 text-sm">₹</span>
+                    <input
+                      type="number"
+                      placeholder="0"
+                      className="w-full border rounded-xl pl-6 pr-2 py-1.5 font-bold outline-none transition-all bg-rose-5 dark:bg-rose-900/20 border-rose-200 dark:border-rose-800 text-rose-700 dark:text-rose-300 focus:ring-2 focus:ring-rose-500 text-sm"
+                      value={currentMonthData.loss || ''}
+                      onChange={(e) => updateMonthData('loss', e.target.value)}
+                    />
+                  </div>
                 </div>
+              </div>
 
-                <button 
+              <div className="space-y-1 mb-3">
+                <label className="text-[10px] font-bold text-gray-400 ml-1">Note : </label>
+                <textarea
+                  placeholder={`Notes for ${MONTHS[selectedMonth]}...`}
+                  className="w-full border rounded-xl px-3 py-2 text-xs font-medium outline-none resize-none h-20 bg-gray-50 dark:bg-gray-900/40 border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 focus:ring-2 focus:ring-gray-400"
+                  value={currentMonthData.note || ''}
+                  onChange={(e) => updateMonthData('note', e.target.value)}
+                />
+              </div>
+
+              <button
                 onClick={handleSaveMonthData}
                 className={`w-full py-2.5 rounded-xl font-bold text-sm text-white shadow-lg active:scale-95 transition-all flex items-center justify-center gap-2 ${currentTheme.primary} ${currentTheme.shadow} ${saveStatus === 'saved' ? 'opacity-80' : ''}`}
-                >
+              >
                 {saveStatus === 'saved' ? (
-                    <>
+                  <>
                     <CheckCircle2 size={16} /> Saved!
-                    </>
+                  </>
                 ) : (
-                    <>
+                  <>
                     <Save size={16} /> Save Summary
-                    </>
+                  </>
                 )}
-                </button>
+              </button>
             </>
-        )}
-      </Card>
-    </div>
+          )}
+        </Card>
+      </div>
     );
   };
 
@@ -1426,99 +1477,99 @@ export default function App() {
     // Collect and format all records including legacy compatibility
     const savedRecords = Object.entries(monthlyData)
       .map(([key, data]) => {
-          let year = 2026;
-          let monthIndex = parseInt(key);
-          if (key.includes('-')) {
-              [year, monthIndex] = key.split('-').map(Number);
-          }
-          return { key, year, monthIndex, data };
+        let year = 2026;
+        let monthIndex = parseInt(key);
+        if (key.includes('-')) {
+          [year, monthIndex] = key.split('-').map(Number);
+        }
+        return { key, year, monthIndex, data };
       })
       .filter(record => record.data && record.data.isSaved)
       .sort((a, b) => {
-          if (a.year !== b.year) return b.year - a.year;
-          return b.monthIndex - a.monthIndex;
+        if (a.year !== b.year) return b.year - a.year;
+        return b.monthIndex - a.monthIndex;
       });
 
     const totalProfit = savedRecords.reduce((acc, curr) => acc + (Number(curr.data.profit) || 0), 0);
     const totalLoss = savedRecords.reduce((acc, curr) => acc + (Number(curr.data.loss) || 0), 0);
     const net = totalProfit - totalLoss;
-    
+
     return (
       <div className="animate-fade-in space-y-5 pb-24 text-gray-900 dark:text-white">
-         <h2 className="text-xl font-bold mb-4 text-gray-900 dark:text-white">Data Storage</h2>
-  
-         <Card className="bg-gradient-to-br from-indigo-500 to-purple-600 border-none text-white p-5">
-            <div className="flex justify-between items-center mb-1">
-               <span className="text-indigo-100 text-xs font-medium uppercase tracking-wider">Net Balance</span>
-               <Database size={18} className="text-indigo-200" />
+        <h2 className="text-xl font-bold mb-4 text-gray-900 dark:text-white">Data Storage</h2>
+
+        <Card className="bg-gradient-to-br from-indigo-500 to-purple-600 border-none text-white p-5">
+          <div className="flex justify-between items-center mb-1">
+            <span className="text-indigo-100 text-xs font-medium uppercase tracking-wider">Net Balance</span>
+            <Database size={18} className="text-indigo-200" />
+          </div>
+          <div className="text-2xl font-bold mb-3 text-white">
+            {formatCurrency(net)}
+          </div>
+          <div className="flex gap-3 text-xs text-white">
+            <div className="bg-white/20 px-2 py-1 rounded-md flex items-center backdrop-blur-md">
+              <TrendingUp size={12} className="mr-1 text-emerald-300" /> {formatCurrency(totalProfit)}
             </div>
-            <div className="text-2xl font-bold mb-3 text-white">
-               {formatCurrency(net)}
+            <div className="bg-white/20 px-2 py-1 rounded-md flex items-center backdrop-blur-md">
+              <TrendingDown size={12} className="mr-1 text-rose-300" /> {formatCurrency(totalLoss)}
             </div>
-            <div className="flex gap-3 text-xs text-white">
-               <div className="bg-white/20 px-2 py-1 rounded-md flex items-center backdrop-blur-md">
-                  <TrendingUp size={12} className="mr-1 text-emerald-300" /> {formatCurrency(totalProfit)}
-               </div>
-               <div className="bg-white/20 px-2 py-1 rounded-md flex items-center backdrop-blur-md">
-                  <TrendingDown size={12} className="mr-1 text-rose-300" /> {formatCurrency(totalLoss)}
-               </div>
+          </div>
+        </Card>
+
+        <div className="space-y-3">
+          <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider ml-1">Monthly Records</h3>
+          {savedRecords.length === 0 ? (
+            <div className="text-center py-8 text-gray-400">
+              <Database size={40} className="mx-auto mb-2 opacity-20" />
+              <p className="text-sm">No locked data recorded yet.</p>
             </div>
-         </Card>
-  
-         <div className="space-y-3">
-            <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider ml-1">Monthly Records</h3>
-            {savedRecords.length === 0 ? (
-               <div className="text-center py-8 text-gray-400">
-                  <Database size={40} className="mx-auto mb-2 opacity-20" />
-                  <p className="text-sm">No locked data recorded yet.</p>
-               </div>
-            ) : (
-               savedRecords.map(({ key, year, monthIndex, data }) => {
-                  return (
-                      <Card key={key} className="p-4">
-                          <div className="flex justify-between items-start mb-2">
-                            <h4 className="font-bold text-sm text-gray-900 dark:text-white">
-                                {MONTHS[monthIndex]} <span className="text-gray-400 font-medium text-xs ml-1">{year}</span>
-                            </h4>
-                            <button 
-                              onClick={() => {
-                                 const newData = { ...monthlyData };
-                                 delete newData[key]; 
-                                 setMonthlyData(newData);
-                              }}
-                              className="text-gray-400 hover:text-red-500 transition-colors p-1"
-                           >
-                              <Trash2 size={14} />
-                           </button>
-                        </div>
-                        
-                        <div className="grid grid-cols-2 gap-3 mb-2">
-                           <div className="bg-emerald-50 dark:bg-emerald-900/20 p-1.5 rounded-lg border border-emerald-100 dark:border-emerald-800/30">
-                              <label className="text-[10px] text-emerald-600 font-bold block">Profit</label>
-                              <span className="font-mono font-bold text-sm text-emerald-700 dark:text-emerald-400">
-                                  {data.profit ? `+${data.profit}` : '-'}
-                              </span>
-                           </div>
-                           <div className="bg-rose-50 dark:bg-rose-900/20 p-1.5 rounded-lg border border-rose-100 dark:border-rose-800/30">
-                               <label className="text-[10px] text-rose-600 font-bold block">Loss</label>
-                               <span className="font-mono font-bold text-sm text-rose-700 dark:text-rose-400">
-                                  {data.loss ? `-${data.loss}` : '-'}
-                               </span>
-                           </div>
-                        </div>
-  
-                        {data.note && (
-                           <div className="bg-gray-50 dark:bg-gray-800 p-2 rounded-lg border border-gray-100 dark:border-gray-700">
-                              <p className="text-xs text-gray-600 dark:text-gray-300 italic">
-                                  "{data.note}"
-                              </p>
-                           </div>
-                        )}
-                      </Card>
-                  );
-               })
-            )}
-         </div>
+          ) : (
+            savedRecords.map(({ key, year, monthIndex, data }) => {
+              return (
+                <Card key={key} className="p-4">
+                  <div className="flex justify-between items-start mb-2">
+                    <h4 className="font-bold text-sm text-gray-900 dark:text-white">
+                      {MONTHS[monthIndex]} <span className="text-gray-400 font-medium text-xs ml-1">{year}</span>
+                    </h4>
+                    <button
+                      onClick={() => {
+                        const newData = { ...monthlyData };
+                        delete newData[key];
+                        setMonthlyData(newData);
+                      }}
+                      className="text-gray-400 hover:text-red-500 transition-colors p-1"
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3 mb-2">
+                    <div className="bg-emerald-50 dark:bg-emerald-900/20 p-1.5 rounded-lg border border-emerald-100 dark:border-emerald-800/30">
+                      <label className="text-[10px] text-emerald-600 font-bold block">Profit</label>
+                      <span className="font-mono font-bold text-sm text-emerald-700 dark:text-emerald-400">
+                        {data.profit ? `+${data.profit}` : '-'}
+                      </span>
+                    </div>
+                    <div className="bg-rose-50 dark:bg-rose-900/20 p-1.5 rounded-lg border border-rose-100 dark:border-rose-800/30">
+                      <label className="text-[10px] text-rose-600 font-bold block">Loss</label>
+                      <span className="font-mono font-bold text-sm text-rose-700 dark:text-rose-400">
+                        {data.loss ? `-${data.loss}` : '-'}
+                      </span>
+                    </div>
+                  </div>
+
+                  {data.note && (
+                    <div className="bg-gray-50 dark:bg-gray-800 p-2 rounded-lg border border-gray-100 dark:border-gray-700">
+                      <p className="text-xs text-gray-600 dark:text-gray-300 italic">
+                        "{data.note}"
+                      </p>
+                    </div>
+                  )}
+                </Card>
+              );
+            })
+          )}
+        </div>
       </div>
     );
   }
@@ -1530,92 +1581,92 @@ export default function App() {
       <Card className="p-4">
         <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Color Theme</h3>
         <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-                <div className={`p-2 rounded-lg text-white ${currentTheme.primary}`}>
-                    <Palette size={18} />
-                </div>
-                <div>
-                    <p className="font-semibold text-sm text-gray-900 dark:text-white">{currentTheme.name}</p>
-                    <p className="text-[10px] text-gray-500">Select your accent color.</p>
-                </div>
+          <div className="flex items-center gap-3">
+            <div className={`p-2 rounded-lg text-white ${currentTheme.primary}`}>
+              <Palette size={18} />
             </div>
-            
-            <div className="flex gap-2">
-                {Object.keys(THEMES).map(key => (
-                    <button
-                        key={key}
-                        onClick={() => setColorTheme(key)}
-                        className={`w-5 h-5 rounded-full ${THEMES[key].primary} transition-transform duration-200 ${colorTheme === key ? 'ring-2 ring-offset-2 ring-gray-400 scale-110' : 'hover:scale-110'}`}
-                        aria-label={`Select ${THEMES[key].name} theme`}
-                    />
-                ))}
+            <div>
+              <p className="font-semibold text-sm text-gray-900 dark:text-white">{currentTheme.name}</p>
+              <p className="text-[10px] text-gray-500">Select your accent color.</p>
             </div>
+          </div>
+
+          <div className="flex gap-2">
+            {Object.keys(THEMES).map(key => (
+              <button
+                key={key}
+                onClick={() => setColorTheme(key)}
+                className={`w-5 h-5 rounded-full ${THEMES[key].primary} transition-transform duration-200 ${colorTheme === key ? 'ring-2 ring-offset-2 ring-gray-400 scale-110' : 'hover:scale-110'}`}
+                aria-label={`Select ${THEMES[key].name} theme`}
+              />
+            ))}
+          </div>
         </div>
       </Card>
 
       <Card className="p-4">
-          <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Daily Reminder</h3>
-          <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                      <div className={`p-2 rounded-lg text-white ${notificationsEnabled ? 'bg-orange-500' : 'bg-gray-400'}`}>
-                          <Bell size={18} />
-                      </div>
-                      <div>
-                          <p className="font-semibold text-sm text-gray-900 dark:text-white">Enable Notifications</p>
-                          <p className="text-[10px] text-gray-500">Get reminded to invest daily.</p>
-                      </div>
-                  </div>
-                  <NotificationSwitch 
-                      checked={notificationsEnabled} 
-                      onChange={() => {
-                          unlockAudio(); // Unlock audio context on interaction
-                          if (!notificationsEnabled) {
-                              Notification.requestPermission();
-                          }
-                          setNotificationsEnabled(!notificationsEnabled);
-                      }}
-                  />
+        <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Daily Reminder</h3>
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className={`p-2 rounded-lg text-white ${notificationsEnabled ? 'bg-orange-500' : 'bg-gray-400'}`}>
+                <Bell size={18} />
               </div>
-
-              {notificationsEnabled && (
-                <div className="animate-fade-in bg-gray-50 dark:bg-gray-800 p-3 rounded-xl border border-gray-100 dark:border-gray-700">
-                    <div className="flex flex-col gap-3">
-                        <div className="flex items-center gap-2">
-                            <Clock size={14} className="text-gray-400" />
-                            <label className="text-xs font-bold text-gray-700 dark:text-gray-300">Set Reminder Time</label>
-                        </div>
-                        
-                        <div className="flex gap-2">
-                            <input 
-                                type="time" 
-                                value={notificationTime}
-                                onChange={(e) => setNotificationTime(e.target.value)}
-                                className="flex-1 px-3 py-1.5 rounded-lg bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-600 text-gray-900 dark:text-white text-sm font-bold outline-none focus:ring-2 focus:ring-emerald-500/50"
-                            />
-                            
-                            <button 
-                                onClick={handleSaveNotificationTime}
-                                className={`px-3 py-1.5 rounded-lg font-bold text-xs text-white transition-all active:scale-95 ${currentTheme.primary} ${notificationStatus === 'saved' ? 'opacity-80' : ''}`}
-                            >
-                                {notificationStatus === 'saved' ? 'Saved' : 'Save'}
-                            </button>
-                        </div>
-                        <div className="flex items-center justify-between mt-1">
-                            <p className="text-[9px] text-gray-400 italic">
-                                * Browser notification must be allowed.
-                            </p>
-                            <button 
-                                onClick={handleTestNotification}
-                                className="text-[9px] font-bold px-2 py-0.5 bg-gray-200 dark:bg-gray-700 rounded text-gray-600 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
-                            >
-                                Test
-                            </button>
-                        </div>
-                    </div>
-                </div>
-              )}
+              <div>
+                <p className="font-semibold text-sm text-gray-900 dark:text-white">Enable Notifications</p>
+                <p className="text-[10px] text-gray-500">Get reminded to invest daily.</p>
+              </div>
+            </div>
+            <NotificationSwitch
+              checked={notificationsEnabled}
+              onChange={() => {
+                unlockAudio(); // Unlock audio context on interaction
+                if (!notificationsEnabled) {
+                  Notification.requestPermission();
+                }
+                setNotificationsEnabled(!notificationsEnabled);
+              }}
+            />
           </div>
+
+          {notificationsEnabled && (
+            <div className="animate-fade-in bg-gray-50 dark:bg-gray-800 p-3 rounded-xl border border-gray-100 dark:border-gray-700">
+              <div className="flex flex-col gap-3">
+                <div className="flex items-center gap-2">
+                  <Clock size={14} className="text-gray-400" />
+                  <label className="text-xs font-bold text-gray-700 dark:text-gray-300">Set Reminder Time</label>
+                </div>
+
+                <div className="flex gap-2">
+                  <input
+                    type="time"
+                    value={notificationTime}
+                    onChange={(e) => setNotificationTime(e.target.value)}
+                    className="flex-1 px-3 py-1.5 rounded-lg bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-600 text-gray-900 dark:text-white text-sm font-bold outline-none focus:ring-2 focus:ring-emerald-500/50"
+                  />
+
+                  <button
+                    onClick={handleSaveNotificationTime}
+                    className={`px-3 py-1.5 rounded-lg font-bold text-xs text-white transition-all active:scale-95 ${currentTheme.primary} ${notificationStatus === 'saved' ? 'opacity-80' : ''}`}
+                  >
+                    {notificationStatus === 'saved' ? 'Saved' : 'Save'}
+                  </button>
+                </div>
+                <div className="flex items-center justify-between mt-1">
+                  <p className="text-[9px] text-gray-400 italic">
+                    * Browser notification must be allowed.
+                  </p>
+                  <button
+                    onClick={handleTestNotification}
+                    className="text-[9px] font-bold px-2 py-0.5 bg-gray-200 dark:bg-gray-700 rounded text-gray-600 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
+                  >
+                    Test
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
       </Card>
 
       <Card className="p-4">
@@ -1630,8 +1681,8 @@ export default function App() {
               <p className="text-[10px] text-gray-500">{darkMode ? "Easier on the eyes at night" : "Bright and clear for day"}.</p>
             </div>
           </div>
-          <ThemeSwitch 
-            checked={darkMode} 
+          <ThemeSwitch
+            checked={darkMode}
             onChange={() => setDarkMode(!darkMode)}
           />
         </div>
@@ -1641,7 +1692,7 @@ export default function App() {
 
   return (
     <div className={`h-[100dvh] w-full transition-colors duration-500 font-montserrat ${darkMode ? 'dark bg-gray-900' : 'bg-gray-50'} overflow-hidden`}>
-      
+
       {/* Background Ambience */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
         <div className={`absolute top-[-10%] left-[-10%] w-[50%] h-[50%] rounded-full ${currentTheme.blob} blur-[100px] transition-colors duration-700`} />
@@ -1653,59 +1704,59 @@ export default function App() {
       </AnimatePresence>
 
       <div className="relative h-full w-full sm:max-w-md sm:mx-auto sm:bg-white/50 dark:sm:bg-gray-900/50 sm:shadow-2xl sm:h-[95vh] sm:mt-[2.5vh] sm:rounded-[40px] sm:border-[8px] sm:border-gray-200 dark:sm:border-gray-800 flex flex-col backdrop-blur-sm overflow-hidden">
-        
-        <div 
-            className="flex-1 overflow-y-auto p-4 scrollbar-hide touch-pan-y" 
-            onTouchStart={onTouchStart} 
-            onTouchMove={onTouchMove} 
-            onTouchEnd={onTouchEnd}
+
+        <div
+          className="flex-1 overflow-y-auto p-4 scrollbar-hide touch-pan-y"
+          onTouchStart={onTouchStart}
+          onTouchMove={onTouchMove}
+          onTouchEnd={onTouchEnd}
         >
-           {view === 'dashboard' && renderDashboard()}
-           {view === 'planner' && renderPlanner()}
-           {view === 'storage' && renderStorage()}
-           {view === 'settings' && renderSettings()}
-           
-           <div className={cn("flex-col items-center justify-center h-full pb-24", view === 'game' ? "flex" : "hidden")}>
-               <div className="relative w-full h-full max-w-[501px] shadow-2xl rounded-[32px] overflow-hidden border-4 border-gray-200 dark:border-gray-700 bg-black">
-                 <EscapeRoadGame />
-               </div>
-           </div>
+          {view === 'dashboard' && renderDashboard()}
+          {view === 'planner' && renderPlanner()}
+          {view === 'storage' && renderStorage()}
+          {view === 'settings' && renderSettings()}
+
+          <div className={cn("flex-col items-center justify-center h-full pb-24", view === 'game' ? "flex" : "hidden")}>
+            <div className="relative w-full h-full max-w-[501px] shadow-2xl rounded-[32px] overflow-hidden border-4 border-gray-200 dark:border-gray-700 bg-black">
+              <EscapeRoadGame />
+            </div>
+          </div>
         </div>
 
         <div className="absolute bottom-0 left-0 right-0 sm:static p-4 z-50 bg-gradient-to-t from-gray-50 via-gray-50/95 to-transparent dark:from-gray-900 dark:via-gray-900/95 sm:from-transparent sm:via-transparent sm:to-transparent transition-all duration-300">
           <div className="bg-white/90 dark:bg-gray-900/90 backdrop-blur-xl border border-gray-200/50 dark:border-gray-700/50 rounded-2xl p-1.5 flex justify-between items-center shadow-lg shadow-gray-200/50 dark:shadow-black/50">
-            <IconButton 
+            <IconButton
               key="dashboard"
-              Icon={ChartColumnIncreasingIcon} 
-              active={view === 'dashboard'} 
+              Icon={ChartColumnIncreasingIcon}
+              active={view === 'dashboard'}
               onClick={() => setView('dashboard')}
               theme={currentTheme}
             />
-            <IconButton 
+            <IconButton
               key="planner"
-              Icon={CalendarCheckIcon} 
-              active={view === 'planner'} 
+              Icon={CalendarCheckIcon}
+              active={view === 'planner'}
               onClick={() => setView('planner')}
               theme={currentTheme}
             />
-            <IconButton 
+            <IconButton
               key="storage"
-              Icon={DatabaseIcon} 
-              active={view === 'storage'} 
+              Icon={DatabaseIcon}
+              active={view === 'storage'}
               onClick={() => setView('storage')}
               theme={currentTheme}
             />
-            <IconButton 
+            <IconButton
               key="game"
-              Icon={GamepadIcon} 
-              active={view === 'game'} 
+              Icon={GamepadIcon}
+              active={view === 'game'}
               onClick={() => setView('game')}
               theme={currentTheme}
             />
-            <IconButton 
+            <IconButton
               key="settings"
-              Icon={CogIcon} 
-              active={view === 'settings'} 
+              Icon={CogIcon}
+              active={view === 'settings'}
               onClick={() => setView('settings')}
               theme={currentTheme}
             />
