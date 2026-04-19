@@ -642,44 +642,11 @@ const IconButton = ({ Icon, active, onClick, theme }) => (
 
 // --- Escape Road Game Component ---
 const EscapeRoadGame = () => {
-  const iframeRef = useRef(null);
-  const containerRef = useRef(null);
   const [loading, setLoading] = useState(true);
   const [isPlaying, setIsPlaying] = useState(false);
 
-  useEffect(() => {
-     if (!isPlaying) return;
-
-     const resizeGame = () => {
-        if (!iframeRef.current || !containerRef.current) return;
-        
-        const container = containerRef.current;
-        const width = container.clientWidth;
-        const height = container.clientHeight;
-        
-        const dpr = window.devicePixelRatio || 1;
-        const scale = Math.min(dpr, 2.5);
-        
-        iframeRef.current.style.width = `${width * scale}px`;
-        iframeRef.current.style.height = `${height * scale}px`;
-        iframeRef.current.style.transform = `scale(${1 / scale})`;
-        iframeRef.current.style.transformOrigin = 'top left';
-     };
-
-     setTimeout(resizeGame, 50);
-     const observer = new ResizeObserver(resizeGame);
-     if (containerRef.current) observer.observe(containerRef.current);
-     return () => observer.disconnect();
-  }, [isPlaying]);
-
-  const handleFocus = () => {
-      if (iframeRef.current) {
-          iframeRef.current.contentWindow.focus();
-      }
-  };
-
   return (
-    <div ref={containerRef} className="w-full h-full relative overflow-hidden bg-[#1a1a1a]" onClick={isPlaying ? handleFocus : undefined}>
+    <div className="w-full h-full relative overflow-hidden bg-[#1a1a1a]">
        {!isPlaying ? (
            <div className="absolute inset-0 flex flex-col items-center justify-center bg-gray-900 z-20 overflow-hidden group cursor-pointer" onClick={() => setIsPlaying(true)}>
                <div className="absolute inset-0 bg-gray-900">
@@ -723,18 +690,14 @@ const EscapeRoadGame = () => {
                     <div className="w-10 h-10 border-4 border-gray-600 border-t-white rounded-full animate-spin"></div>
                  </div>
                )}
+               {/* Native width/height replaces the heavy JavaScript ResizeObserver scaling loop to fix lag */}
                <iframe 
-                   ref={iframeRef}
                    src="https://raw.githack.com/abisdbest/classroom.google.com/85146ac051b67a3c32ebdf898bb0144d818d580b/drive.google.com/escape%20road/index.html"
-                   className="block border-none"
-                   onLoad={() => {
-                       setLoading(false);
-                       handleFocus();
-                   }}
+                   className="w-full h-full block border-none absolute inset-0"
+                   onLoad={() => setLoading(false)}
                    allowFullScreen
                    scrolling="no"
                />
-               
            </>
        )}
     </div>
@@ -847,7 +810,10 @@ export default function App() {
   const [investments, setInvestments] = useState({}); 
   const [monthlyData, setMonthlyData] = useState({}); 
   const [profile, setProfile] = useState({ name: 'San • dept', image: null });
+  
   const [selectedMonth, setSelectedMonth] = useState(0); 
+  const [selectedYear, setSelectedYear] = useState(2026); // Added Year State
+  
   const [saveStatus, setSaveStatus] = useState('');
   
   // Notification State
@@ -855,24 +821,22 @@ export default function App() {
   const [notificationTime, setNotificationTime] = useState('09:00');
   const [notificationStatus, setNotificationStatus] = useState(''); 
   const lastNotificationDate = useRef(null);
-  // Audio Ref
-  const audioRef = useRef(null);
-
-  // Initialize Audio
-  useEffect(() => {
-      audioRef.current = new Audio("https://assets.mixkit.co/sfx/preview/mixkit-software-interface-start-2574.mp3");
-  }, []);
+  
+  // Audio Context Ref
+  const audioCtxRef = useRef(null);
 
   // Function to unlock audio on first interaction
   const unlockAudio = () => {
-      const audio = audioRef.current;
-      if (audio) {
-          audio.volume = 0;
-          audio.play().then(() => {
-              audio.pause();
-              audio.currentTime = 0;
-              audio.volume = 0.5; // Reset volume for actual alerts
-          }).catch(e => console.log("Audio unlock failed (user gesture required)", e));
+      try {
+          if (!audioCtxRef.current) {
+              const AudioContext = window.AudioContext || window.webkitAudioContext;
+              audioCtxRef.current = new AudioContext();
+          }
+          if (audioCtxRef.current.state === 'suspended') {
+              audioCtxRef.current.resume();
+          }
+      } catch (e) {
+          console.log("Audio unlock failed (user gesture required)", e);
       }
   };
 
@@ -903,6 +867,7 @@ export default function App() {
       setColorTheme(THEMES[savedTheme] ? savedTheme : 'green');
       setNotificationsEnabled(parsed.notificationsEnabled || false);
       setNotificationTime(parsed.notificationTime || '09:00');
+      if (parsed.selectedYear) setSelectedYear(parsed.selectedYear);
     }
   }, []);
 
@@ -915,12 +880,13 @@ export default function App() {
         darkMode,
         colorTheme,
         notificationsEnabled,
-        notificationTime
+        notificationTime,
+        selectedYear
       }));
     } catch (e) {
       console.warn("Storage quota exceeded or error saving data", e);
     }
-  }, [investments, monthlyData, profile, darkMode, colorTheme, notificationsEnabled, notificationTime]);
+  }, [investments, monthlyData, profile, darkMode, colorTheme, notificationsEnabled, notificationTime, selectedYear]);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -944,11 +910,30 @@ export default function App() {
         }
     }
     
-    // 3. Play Sound
-    const audio = audioRef.current;
-    if (audio) {
-        audio.currentTime = 0;
-        audio.play().catch(e => console.log("Audio play blocked", e));
+    // 3. Play Sound via Web Audio API
+    try {
+        if (audioCtxRef.current) {
+            const ctx = audioCtxRef.current;
+            if (ctx.state === 'suspended') ctx.resume();
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(880, ctx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(1760, ctx.currentTime + 0.1);
+            
+            gain.gain.setValueAtTime(0, ctx.currentTime);
+            gain.gain.linearRampToValueAtTime(0.2, ctx.currentTime + 0.02);
+            gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3);
+            
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            
+            osc.start(ctx.currentTime);
+            osc.stop(ctx.currentTime + 0.3);
+        }
+    } catch(e) {
+        console.log("Audio play blocked", e);
     }
 
     // 4. Try Native Notification
@@ -1031,7 +1016,7 @@ export default function App() {
   // --- Actions ---
 
   const toggleDay = (dayIndex) => {
-    const key = `${selectedMonth}-${dayIndex}`;
+    const key = `${selectedYear}-${selectedMonth}-${dayIndex}`;
     setInvestments(prev => ({
       ...prev,
       [key]: !prev[key]
@@ -1039,20 +1024,22 @@ export default function App() {
   };
 
   const updateMonthData = (field, value) => {
+    const monthKey = `${selectedYear}-${selectedMonth}`;
     setMonthlyData(prev => ({
       ...prev,
-      [selectedMonth]: {
-        ...prev[selectedMonth],
+      [monthKey]: {
+        ...(prev[monthKey] || (selectedYear === 2026 ? prev[selectedMonth] : {})),
         [field]: value
       }
     }));
   };
 
   const handleSaveMonthData = () => {
+    const monthKey = `${selectedYear}-${selectedMonth}`;
     setMonthlyData(prev => ({
       ...prev,
-      [selectedMonth]: {
-        ...prev[selectedMonth],
+      [monthKey]: {
+        ...(prev[monthKey] || (selectedYear === 2026 ? prev[selectedMonth] : {})),
         isSaved: true 
       }
     }));
@@ -1259,30 +1246,65 @@ export default function App() {
   );
 
   const renderPlanner = () => {
-    const isLocked = monthlyData[selectedMonth]?.isSaved;
+    const monthKey = `${selectedYear}-${selectedMonth}`;
+    const currentMonthData = monthlyData[monthKey] || (selectedYear === 2026 ? monthlyData[selectedMonth] : undefined) || {};
+    const isLocked = currentMonthData.isSaved;
     
-    const year = 2026;
-    const firstDayIndex = new Date(year, selectedMonth, 1).getDay();
-    const daysInMonth = DAYS_IN_MONTH(selectedMonth, year);
+    const firstDayIndex = new Date(selectedYear, selectedMonth, 1).getDay();
+    const daysInMonth = DAYS_IN_MONTH(selectedMonth, selectedYear);
 
     return (
     <div className="animate-fade-in flex flex-col pb-40 text-gray-900 dark:text-white">
       <div className="flex items-center justify-between mb-4 px-1">
-        <button 
-          onClick={() => setSelectedMonth(prev => Math.max(0, prev - 1))}
-          className="p-1.5 rounded-full hover:bg-gray-100 dark:hover:bg-white/10 active:scale-95 transition-transform"
-          disabled={selectedMonth === 0}
-        >
-          <ChevronLeft size={20} className={selectedMonth === 0 ? "text-gray-300" : "text-gray-900 dark:text-white"} />
-        </button>
-        <h2 className="text-lg font-bold text-gray-900 dark:text-white w-40 text-center">{MONTHS[selectedMonth]} 2026</h2>
-        <button 
-          onClick={() => setSelectedMonth(prev => Math.min(11, prev + 1))}
-          className="p-1.5 rounded-full hover:bg-gray-100 dark:hover:bg-white/10 active:scale-95 transition-transform"
-          disabled={selectedMonth === 11}
-        >
-          <ChevronRight size={20} className={selectedMonth === 11 ? "text-gray-300" : "text-gray-900 dark:text-white"} />
-        </button>
+        <div className="flex items-center gap-2">
+            <h2 className="text-xl font-black text-gray-900 dark:text-white tracking-tight">
+                {MONTHS[selectedMonth]}
+            </h2>
+            <div className="relative flex items-center">
+                <select 
+                    value={selectedYear}
+                    onChange={(e) => setSelectedYear(Number(e.target.value))}
+                    className="appearance-none bg-transparent text-xl font-black text-gray-400 outline-none cursor-pointer pr-4 hover:text-gray-500 transition-colors"
+                >
+                    {Array.from({ length: 2100 - 2026 + 1 }, (_, i) => 2026 + i).map(y => (
+                        <option key={y} value={y} className="text-base text-gray-900 dark:bg-gray-800 dark:text-white">
+                            {y}
+                        </option>
+                    ))}
+                </select>
+                <ChevronRight className="absolute right-0 text-gray-400 pointer-events-none rotate-90" size={14} />
+            </div>
+        </div>
+        <div className="flex items-center gap-1">
+            <button 
+                onClick={() => {
+                    if (selectedMonth === 0) {
+                        setSelectedMonth(11);
+                        setSelectedYear(prev => Math.max(2026, prev - 1));
+                    } else {
+                        setSelectedMonth(prev => prev - 1);
+                    }
+                }}
+                className="p-1.5 rounded-full hover:bg-gray-100 dark:hover:bg-white/10 active:scale-95 transition-transform"
+                disabled={selectedMonth === 0 && selectedYear === 2026}
+            >
+                <ChevronLeft size={20} className={selectedMonth === 0 && selectedYear === 2026 ? "text-gray-300 dark:text-gray-600" : "text-gray-900 dark:text-white"} />
+            </button>
+            <button 
+                onClick={() => {
+                    if (selectedMonth === 11) {
+                        setSelectedMonth(0);
+                        setSelectedYear(prev => Math.min(2100, prev + 1));
+                    } else {
+                        setSelectedMonth(prev => prev + 1);
+                    }
+                }}
+                className="p-1.5 rounded-full hover:bg-gray-100 dark:hover:bg-white/10 active:scale-95 transition-transform"
+                disabled={selectedMonth === 11 && selectedYear === 2100}
+            >
+                <ChevronRight size={20} className={selectedMonth === 11 && selectedYear === 2100 ? "text-gray-300 dark:text-gray-600" : "text-gray-900 dark:text-white"} />
+            </button>
+        </div>
       </div>
 
       <div className="grid grid-cols-7 gap-1 mb-2 px-1">
@@ -1297,7 +1319,10 @@ export default function App() {
         ))}
         
         {Array.from({ length: daysInMonth }).map((_, i) => {
-          const isChecked = investments[`${selectedMonth}-${i + 1}`];
+          // Compatibility logic for legacy 2026 keys without year prefix
+          const isLegacyChecked = selectedYear === 2026 && investments[`${selectedMonth}-${i + 1}`];
+          const isChecked = investments[`${selectedYear}-${selectedMonth}-${i + 1}`] || isLegacyChecked;
+
           return (
             <button
               key={i}
@@ -1346,7 +1371,7 @@ export default function App() {
                         type="number" 
                         placeholder="0"
                         className="w-full border rounded-xl pl-6 pr-2 py-1.5 font-bold outline-none transition-all bg-emerald-5 dark:bg-emerald-900/20 border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300 focus:ring-2 focus:ring-emerald-500 text-sm"
-                        value={monthlyData[selectedMonth]?.profit || ''}
+                        value={currentMonthData.profit || ''}
                         onChange={(e) => updateMonthData('profit', e.target.value)}
                       />
                     </div>
@@ -1359,7 +1384,7 @@ export default function App() {
                         type="number" 
                         placeholder="0"
                         className="w-full border rounded-xl pl-6 pr-2 py-1.5 font-bold outline-none transition-all bg-rose-5 dark:bg-rose-900/20 border-rose-200 dark:border-rose-800 text-rose-700 dark:text-rose-300 focus:ring-2 focus:ring-rose-500 text-sm"
-                        value={monthlyData[selectedMonth]?.loss || ''}
+                        value={currentMonthData.loss || ''}
                         onChange={(e) => updateMonthData('loss', e.target.value)}
                       />
                       </div>
@@ -1371,7 +1396,7 @@ export default function App() {
                   <textarea 
                     placeholder={`Notes for ${MONTHS[selectedMonth]}...`}
                     className="w-full border rounded-xl px-3 py-2 text-xs font-medium outline-none resize-none h-20 bg-gray-50 dark:bg-gray-900/40 border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 focus:ring-2 focus:ring-gray-400"
-                    value={monthlyData[selectedMonth]?.note || ''}
+                    value={currentMonthData.note || ''}
                     onChange={(e) => updateMonthData('note', e.target.value)}
                   />
                 </div>
@@ -1398,9 +1423,24 @@ export default function App() {
   };
 
   const renderStorage = () => {
-    const savedRecords = Object.values(monthlyData).filter(data => data && data.isSaved);
-    const totalProfit = savedRecords.reduce((acc, curr) => acc + (Number(curr.profit) || 0), 0);
-    const totalLoss = savedRecords.reduce((acc, curr) => acc + (Number(curr.loss) || 0), 0);
+    // Collect and format all records including legacy compatibility
+    const savedRecords = Object.entries(monthlyData)
+      .map(([key, data]) => {
+          let year = 2026;
+          let monthIndex = parseInt(key);
+          if (key.includes('-')) {
+              [year, monthIndex] = key.split('-').map(Number);
+          }
+          return { key, year, monthIndex, data };
+      })
+      .filter(record => record.data && record.data.isSaved)
+      .sort((a, b) => {
+          if (a.year !== b.year) return b.year - a.year;
+          return b.monthIndex - a.monthIndex;
+      });
+
+    const totalProfit = savedRecords.reduce((acc, curr) => acc + (Number(curr.data.profit) || 0), 0);
+    const totalLoss = savedRecords.reduce((acc, curr) => acc + (Number(curr.data.loss) || 0), 0);
     const net = totalProfit - totalLoss;
     
     return (
@@ -1433,19 +1473,17 @@ export default function App() {
                   <p className="text-sm">No locked data recorded yet.</p>
                </div>
             ) : (
-               MONTHS.map((month, index) => {
-                  const data = monthlyData[index];
-                  if (!data) return null; 
-                  if (!data.isSaved) return null;
-  
+               savedRecords.map(({ key, year, monthIndex, data }) => {
                   return (
-                      <Card key={month} className="p-4">
+                      <Card key={key} className="p-4">
                           <div className="flex justify-between items-start mb-2">
-                            <h4 className="font-bold text-sm text-gray-900 dark:text-white">{month}</h4>
+                            <h4 className="font-bold text-sm text-gray-900 dark:text-white">
+                                {MONTHS[monthIndex]} <span className="text-gray-400 font-medium text-xs ml-1">{year}</span>
+                            </h4>
                             <button 
                               onClick={() => {
                                  const newData = { ...monthlyData };
-                                 delete newData[index]; 
+                                 delete newData[key]; 
                                  setMonthlyData(newData);
                               }}
                               className="text-gray-400 hover:text-red-500 transition-colors p-1"
@@ -1602,7 +1640,7 @@ export default function App() {
   );
 
   return (
-    <div className={`h-[100dvh] w-full transition-colors duration-500 font-inter ${darkMode ? 'dark bg-gray-900' : 'bg-gray-50'} overflow-hidden`}>
+    <div className={`h-[100dvh] w-full transition-colors duration-500 font-montserrat ${darkMode ? 'dark bg-gray-900' : 'bg-gray-50'} overflow-hidden`}>
       
       {/* Background Ambience */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
@@ -1677,10 +1715,10 @@ export default function App() {
       </div>
 
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800;900&display=swap');
         
-        .font-inter {
-            font-family: 'Inter', sans-serif;
+        .font-montserrat {
+            font-family: 'Montserrat', sans-serif;
         }
 
         .touch-pan-y {
