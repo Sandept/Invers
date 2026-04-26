@@ -839,9 +839,9 @@ export default function App() {
   const [investments, setInvestments] = useState({});
   const [monthlyData, setMonthlyData] = useState({});
   const [profile, setProfile] = useState({ name: 'San • dept', image: null });
-
   const [selectedMonth, setSelectedMonth] = useState(0);
   const [selectedYear, setSelectedYear] = useState(2026); // Added Year State
+  const [investmentMode, setInvestmentMode] = useState('both'); // Added Mode State
 
   const [saveStatus, setSaveStatus] = useState('');
 
@@ -897,6 +897,7 @@ export default function App() {
       setNotificationsEnabled(parsed.notificationsEnabled || false);
       setNotificationTime(parsed.notificationTime || '09:00');
       if (parsed.selectedYear) setSelectedYear(parsed.selectedYear);
+      if (parsed.investmentMode) setInvestmentMode(parsed.investmentMode);
     }
 
     // Load the last notification date to prevent immediate re-firing on refresh
@@ -916,12 +917,13 @@ export default function App() {
         colorTheme,
         notificationsEnabled,
         notificationTime,
-        selectedYear
+        selectedYear,
+        investmentMode
       }));
     } catch (e) {
       console.warn("Storage quota exceeded or error saving data", e);
     }
-  }, [investments, monthlyData, profile, darkMode, colorTheme, notificationsEnabled, notificationTime, selectedYear]);
+  }, [investments, monthlyData, profile, darkMode, colorTheme, notificationsEnabled, notificationTime, selectedYear, investmentMode]);
 
   // --- Live Price Fetching ---
   const fetchLivePrices = useCallback(async () => {
@@ -1093,8 +1095,14 @@ export default function App() {
     Object.values(investments).forEach(status => {
       if (status) {
         totalDays++;
-        btcInvested += 100;
-        goldInvested += 10;
+        if (status === true || status === 'both') {
+          btcInvested += 100;
+          goldInvested += 10;
+        } else if (status === 'btc') {
+          btcInvested += 100;
+        } else if (status === 'gold') {
+          goldInvested += 10;
+        }
       }
     });
 
@@ -1108,10 +1116,15 @@ export default function App() {
 
   const toggleDay = (dayIndex) => {
     const key = `${selectedYear}-${selectedMonth}-${dayIndex}`;
-    setInvestments(prev => ({
-      ...prev,
-      [key]: !prev[key]
-    }));
+    setInvestments(prev => {
+      const currentStatus = prev[key];
+      // If the day is already checked, uncheck it
+      if (currentStatus) {
+        return { ...prev, [key]: false };
+      }
+      // Otherwise, check it with the currently selected investment mode
+      return { ...prev, [key]: investmentMode };
+    });
   };
 
   const updateMonthData = (field, value) => {
@@ -1411,6 +1424,30 @@ export default function App() {
           </div>
         </div>
 
+        <div className="flex items-center justify-between mb-3 px-1">
+          <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Active Mode</span>
+          <div className="flex bg-gray-100 dark:bg-gray-800/80 rounded-lg p-0.5 text-[9px] font-black shadow-inner border border-gray-200/50 dark:border-gray-700/50">
+            <button
+              onClick={() => setInvestmentMode('btc')}
+              className={`px-2.5 py-1 rounded-md transition-all flex items-center gap-1 ${investmentMode === 'btc' ? 'bg-orange-500 text-white shadow-md' : 'text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'}`}
+            >
+              <Bitcoin size={10} /> BTC
+            </button>
+            <button
+              onClick={() => setInvestmentMode('gold')}
+              className={`px-2.5 py-1 rounded-md transition-all flex items-center gap-1 ${investmentMode === 'gold' ? 'bg-yellow-500 text-white shadow-md' : 'text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'}`}
+            >
+              <Coins size={10} /> GOLD
+            </button>
+            <button
+              onClick={() => setInvestmentMode('both')}
+              className={`px-2.5 py-1 rounded-md transition-all flex items-center gap-1 ${investmentMode === 'both' ? `${currentTheme.primary} text-white shadow-md` : 'text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'}`}
+            >
+              <CheckCircle2 size={10} /> BITGOLD
+            </button>
+          </div>
+        </div>
+
         <div className="grid grid-cols-7 gap-1 mb-2 px-1">
           {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((day, i) => (
             <div key={i} className="text-center text-[10px] font-bold text-gray-400">{day}</div>
@@ -1424,8 +1461,22 @@ export default function App() {
 
           {Array.from({ length: daysInMonth }).map((_, i) => {
             // Compatibility logic for legacy 2026 keys without year prefix
-            const isLegacyChecked = selectedYear === 2026 && investments[`${selectedMonth}-${i + 1}`];
-            const isChecked = investments[`${selectedYear}-${selectedMonth}-${i + 1}`] || isLegacyChecked;
+            const legacyStatus = selectedYear === 2026 && investments[`${selectedMonth}-${i + 1}`];
+            const status = investments[`${selectedYear}-${selectedMonth}-${i + 1}`] || legacyStatus;
+
+            let activeClasses = 'bg-white dark:bg-gray-800 border-gray-100 dark:border-gray-700 text-gray-600 dark:text-gray-300 hover:shadow-md';
+            let IconComp = null;
+
+            if (status === 'btc') {
+              activeClasses = 'bg-orange-500 border-orange-400 text-white shadow-md shadow-orange-500/30 transform scale-95';
+              IconComp = <Bitcoin size={12} className="mt-0.5 animate-bounce-short" />;
+            } else if (status === 'gold') {
+              activeClasses = 'bg-yellow-500 border-yellow-400 text-white shadow-md shadow-yellow-500/30 transform scale-95';
+              IconComp = <Coins size={12} className="mt-0.5 animate-bounce-short" />;
+            } else if (status === 'both' || status === true) {
+              activeClasses = `${currentTheme.primary} ${currentTheme.border} text-white shadow-md ${currentTheme.shadow} transform scale-95`;
+              IconComp = <CheckCircle2 size={12} className="mt-0.5 animate-bounce-short" />;
+            }
 
             return (
               <button
@@ -1433,17 +1484,11 @@ export default function App() {
                 onClick={() => toggleDay(i + 1)}
                 className={`
                 relative aspect-square rounded-lg flex flex-col items-center justify-center transition-all duration-200
-                border shadow-sm
-                ${isChecked
-                    ? `${currentTheme.primary} ${currentTheme.border} text-white ${currentTheme.shadow} transform scale-95`
-                    : 'bg-white dark:bg-gray-800 border-gray-100 dark:border-gray-700 text-gray-600 dark:text-gray-300 hover:shadow-md'
-                  }
+                border shadow-sm ${activeClasses}
               `}
               >
                 <span className="text-xs font-bold">{i + 1}</span>
-                {isChecked && (
-                  <CheckCircle2 size={12} className="mt-0.5 animate-bounce-short" />
-                )}
+                {IconComp}
               </button>
             );
           })}
@@ -1468,28 +1513,28 @@ export default function App() {
             <>
               <div className="flex gap-3 mb-3">
                 <div className="flex-1 space-y-1">
-                  <label className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 ml-1">Profit</label>
+                  <label className="text-[10px] font-bold text-orange-600 dark:text-orange-400 ml-1">Bitcoin</label>
                   <div className="relative">
-                    <span className="absolute left-3 top-2 font-bold text-emerald-600 text-sm">₹</span>
+                    <span className="absolute left-3 top-2 font-bold text-orange-600 text-sm">₹</span>
                     <input
                       type="number"
                       placeholder="0"
-                      className="w-full border rounded-xl pl-6 pr-2 py-1.5 font-bold outline-none transition-all bg-emerald-5 dark:bg-emerald-900/20 border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300 focus:ring-2 focus:ring-emerald-500 text-sm"
-                      value={currentMonthData.profit || ''}
-                      onChange={(e) => updateMonthData('profit', e.target.value)}
+                      className="w-full border rounded-xl pl-6 pr-2 py-1.5 font-bold outline-none transition-all bg-orange-50 dark:bg-orange-900/20 border-orange-200 dark:border-orange-800 text-orange-700 dark:text-orange-300 focus:ring-2 focus:ring-orange-500 text-sm"
+                      value={currentMonthData.bitcoin || ''}
+                      onChange={(e) => updateMonthData('bitcoin', e.target.value)}
                     />
                   </div>
                 </div>
                 <div className="flex-1 space-y-1">
-                  <label className="text-[10px] font-bold text-rose-600 dark:text-rose-400 ml-1">Loss</label>
+                  <label className="text-[10px] font-bold text-yellow-600 dark:text-yellow-400 ml-1">Gold</label>
                   <div className="relative">
-                    <span className="absolute left-3 top-2 font-bold text-rose-600 text-sm">₹</span>
+                    <span className="absolute left-3 top-2 font-bold text-yellow-600 text-sm">₹</span>
                     <input
                       type="number"
                       placeholder="0"
-                      className="w-full border rounded-xl pl-6 pr-2 py-1.5 font-bold outline-none transition-all bg-rose-5 dark:bg-rose-900/20 border-rose-200 dark:border-rose-800 text-rose-700 dark:text-rose-300 focus:ring-2 focus:ring-rose-500 text-sm"
-                      value={currentMonthData.loss || ''}
-                      onChange={(e) => updateMonthData('loss', e.target.value)}
+                      className="w-full border rounded-xl pl-6 pr-2 py-1.5 font-bold outline-none transition-all bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-800 text-yellow-700 dark:text-yellow-300 focus:ring-2 focus:ring-yellow-500 text-sm"
+                      value={currentMonthData.gold || ''}
+                      onChange={(e) => updateMonthData('gold', e.target.value)}
                     />
                   </div>
                 </div>
@@ -1543,9 +1588,9 @@ export default function App() {
         return b.monthIndex - a.monthIndex;
       });
 
-    const totalProfit = savedRecords.reduce((acc, curr) => acc + (Number(curr.data.profit) || 0), 0);
-    const totalLoss = savedRecords.reduce((acc, curr) => acc + (Number(curr.data.loss) || 0), 0);
-    const net = totalProfit - totalLoss;
+    const totalBitcoin = savedRecords.reduce((acc, curr) => acc + (Number(curr.data.bitcoin) || 0), 0);
+    const totalGold = savedRecords.reduce((acc, curr) => acc + (Number(curr.data.gold) || 0), 0);
+    const totalValue = totalBitcoin + totalGold;
 
     return (
       <div className="animate-fade-in space-y-5 pb-24 text-gray-900 dark:text-white">
@@ -1553,18 +1598,18 @@ export default function App() {
 
         <Card className="bg-gradient-to-br from-indigo-500 to-purple-600 border-none text-white p-5">
           <div className="flex justify-between items-center mb-1">
-            <span className="text-indigo-100 text-xs font-medium uppercase tracking-wider">Net Balance</span>
+            <span className="text-indigo-100 text-xs font-medium uppercase tracking-wider">Total Value Saved</span>
             <Database size={18} className="text-indigo-200" />
           </div>
           <div className="text-2xl font-bold mb-3 text-white">
-            {formatCurrency(net)}
+            {formatCurrency(totalValue)}
           </div>
           <div className="flex gap-3 text-xs text-white">
             <div className="bg-white/20 px-2 py-1 rounded-md flex items-center backdrop-blur-md">
-              <TrendingUp size={12} className="mr-1 text-emerald-300" /> {formatCurrency(totalProfit)}
+              <Bitcoin size={12} className="mr-1 text-orange-300" /> {formatCurrency(totalBitcoin)}
             </div>
             <div className="bg-white/20 px-2 py-1 rounded-md flex items-center backdrop-blur-md">
-              <TrendingDown size={12} className="mr-1 text-rose-300" /> {formatCurrency(totalLoss)}
+              <Coins size={12} className="mr-1 text-yellow-300" /> {formatCurrency(totalGold)}
             </div>
           </div>
         </Card>
@@ -1597,16 +1642,16 @@ export default function App() {
                   </div>
 
                   <div className="grid grid-cols-2 gap-3 mb-2">
-                    <div className="bg-emerald-50 dark:bg-emerald-900/20 p-1.5 rounded-lg border border-emerald-100 dark:border-emerald-800/30">
-                      <label className="text-[10px] text-emerald-600 font-bold block">Profit</label>
-                      <span className="font-mono font-bold text-sm text-emerald-700 dark:text-emerald-400">
-                        {data.profit ? `+${data.profit}` : '-'}
+                    <div className="bg-orange-50 dark:bg-orange-900/20 p-1.5 rounded-lg border border-orange-100 dark:border-orange-800/30">
+                      <label className="text-[10px] text-orange-600 font-bold flex items-center gap-1 mb-1"><Bitcoin size={12} /> Bitcoin</label>
+                      <span className="font-mono font-bold text-sm text-orange-700 dark:text-orange-400">
+                        {data.bitcoin ? formatCurrency(data.bitcoin) : '-'}
                       </span>
                     </div>
-                    <div className="bg-rose-50 dark:bg-rose-900/20 p-1.5 rounded-lg border border-rose-100 dark:border-rose-800/30">
-                      <label className="text-[10px] text-rose-600 font-bold block">Loss</label>
-                      <span className="font-mono font-bold text-sm text-rose-700 dark:text-rose-400">
-                        {data.loss ? `-${data.loss}` : '-'}
+                    <div className="bg-yellow-50 dark:bg-yellow-900/20 p-1.5 rounded-lg border border-yellow-100 dark:border-yellow-800/30">
+                      <label className="text-[10px] text-yellow-600 font-bold flex items-center gap-1 mb-1"><Coins size={12} /> Gold</label>
+                      <span className="font-mono font-bold text-sm text-yellow-700 dark:text-yellow-400">
+                        {data.gold ? formatCurrency(data.gold) : '-'}
                       </span>
                     </div>
                   </div>
