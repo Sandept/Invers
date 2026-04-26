@@ -833,7 +833,9 @@ export default function App() {
   const [darkMode, setDarkMode] = useState(false);
   const [showSplash, setShowSplash] = useState(true);
   const [colorTheme, setColorTheme] = useState('green');
-  const [prices, setPrices] = useState({ btc: 8500000, gold: 7200 });
+  const [prices, setPrices] = useState({ btc: null, gold: null });
+  const [priceLoading, setPriceLoading] = useState(true);
+  const [priceError, setPriceError] = useState(false);
   const [investments, setInvestments] = useState({});
   const [monthlyData, setMonthlyData] = useState({});
   const [profile, setProfile] = useState({ name: 'San • dept', image: null });
@@ -921,15 +923,54 @@ export default function App() {
     }
   }, [investments, monthlyData, profile, darkMode, colorTheme, notificationsEnabled, notificationTime, selectedYear]);
 
-  useEffect(() => {
-    const interval = setInterval(() => {
+  // --- Live Price Fetching ---
+  const fetchLivePrices = useCallback(async () => {
+    try {
+      // Fetch BTC/INR from CoinGecko and USD/INR from open.er-api.com in parallel
+      const [btcRes, usdInrRes, goldRes] = await Promise.all([
+        fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=inr'),
+        fetch('https://open.er-api.com/v6/latest/USD'),
+        fetch('https://api.gold-api.com/price/XAU')
+      ]);
+
+      if (!btcRes.ok || !usdInrRes.ok || !goldRes.ok) throw new Error('API error');
+
+      const [btcData, usdInrData, goldData] = await Promise.all([
+        btcRes.json(),
+        usdInrRes.json(),
+        goldRes.json()
+      ]);
+
+      const btcInr = btcData?.bitcoin?.inr;               // BTC price in INR
+      const usdToInr = usdInrData?.rates?.INR;            // 1 USD = X INR
+      const goldUsdPerOz = goldData?.price;               // Gold USD per troy ounce
+      const TROY_OZ_TO_GRAM = 31.1035;                    // 1 troy oz = 31.1035 grams
+      const goldInrPerGram = (goldUsdPerOz / TROY_OZ_TO_GRAM) * usdToInr;
+
+      if (btcInr && goldInrPerGram) {
+        setPrices({ btc: Math.round(btcInr), gold: Math.round(goldInrPerGram) });
+        setPriceLoading(false);
+        setPriceError(false);
+      } else {
+        throw new Error('Incomplete data');
+      }
+    } catch (err) {
+      console.warn('Price fetch failed:', err);
+      setPriceLoading(false);
+      setPriceError(true);
+      // Keep previous prices if available, else set reasonable fallback
       setPrices(prev => ({
-        btc: prev.btc * (1 + (Math.random() * 0.002 - 0.001)),
-        gold: prev.gold * (1 + (Math.random() * 0.001 - 0.0005))
+        btc: prev.btc ?? 8500000,
+        gold: prev.gold ?? 8800
       }));
-    }, 3000);
-    return () => clearInterval(interval);
+    }
   }, []);
+
+  useEffect(() => {
+    fetchLivePrices();
+    const interval = setInterval(fetchLivePrices, 60000); // Refresh every 60 seconds
+    return () => clearInterval(interval);
+  }, [fetchLivePrices]);
 
   // Updated Notification Logic
   const triggerNotification = (message) => {
@@ -1057,8 +1098,8 @@ export default function App() {
       }
     });
 
-    const btcUnits = btcInvested / prices.btc;
-    const goldUnits = goldInvested / prices.gold;
+    const btcUnits = prices.btc ? btcInvested / prices.btc : 0;
+    const goldUnits = prices.gold ? goldInvested / prices.gold : 0;
 
     return { totalDays, btcInvested, goldInvested, btcUnits, goldUnits };
   }, [investments, prices]);
@@ -1225,7 +1266,13 @@ export default function App() {
           </div>
           <div className="space-y-0.5">
             <div className="text-sm font-bold text-gray-900 dark:text-white transition-all duration-500">
-              {formatCurrency(prices.btc)}
+              {priceLoading ? (
+                <span className="text-gray-400 text-xs animate-pulse">Loading...</span>
+              ) : priceError ? (
+                <span className="text-red-500 text-xs">API Error</span>
+              ) : (
+                formatCurrency(prices.btc)
+              )}
             </div>
             <div className="flex items-center text-[10px] font-medium text-green-500 bg-green-500/10 w-fit px-1.5 py-0.5 rounded-md">
               <TrendingUp size={10} className="mr-0.5" /> +2.4%
@@ -1248,7 +1295,13 @@ export default function App() {
           </div>
           <div className="space-y-0.5">
             <div className="text-sm font-bold text-gray-900 dark:text-white transition-all duration-500">
-              {formatCurrency(prices.gold)}
+              {priceLoading ? (
+                <span className="text-gray-400 text-xs animate-pulse">Loading...</span>
+              ) : priceError ? (
+                <span className="text-red-500 text-xs">API Error</span>
+              ) : (
+                formatCurrency(prices.gold)
+              )}
             </div>
             <div className="flex items-center text-[10px] font-medium text-red-500 bg-red-500/10 w-fit px-1.5 py-0.5 rounded-md">
               <TrendingDown size={10} className="mr-0.5" /> -0.4%
