@@ -332,13 +332,14 @@ const CogIcon = forwardRef(
           strokeWidth="2"
           strokeLinecap="round"
           strokeLinejoin="round"
-          transition={{ type: 'spring', stiffness: 50, damping: 10 }}
           variants={{
             normal: {
               rotate: 0,
+              transition: { type: 'spring', stiffness: 50, damping: 10 }
             },
             animate: {
-              rotate: 180,
+              rotate: 360,
+              transition: { repeat: Infinity, duration: 3, ease: "linear" }
             },
           }}
           animate={controls}
@@ -630,15 +631,29 @@ const NotificationSwitch = ({ checked, onChange }) => (
   </label>
 );
 
-const IconButton = ({ Icon, active, onClick, theme }) => (
-  <button
-    onClick={onClick}
-    className={`flex-1 p-2 rounded-xl transition-all duration-200 group flex flex-col items-center justify-center gap-1 focus:outline-none ${active ? `${theme.lightBg} ${theme.text}` : 'text-gray-400 md:hover:bg-gray-100 dark:md:hover:bg-white/5 active:bg-gray-100 dark:active:bg-gray-800'}`}
-  >
-    <Icon size={24} className={`transition-transform duration-300 ${active ? 'scale-110' : 'group-hover:scale-105'}`} />
-    <span className="text-[9px] font-medium tracking-wide">{active && <span className={`w-1 h-1 ${theme.dot} rounded-full inline-block mt-1`}></span>}</span>
-  </button>
-);
+const IconButton = ({ Icon, active, onClick, theme }) => {
+  const iconRef = useRef(null);
+
+  useEffect(() => {
+    if (iconRef.current) {
+      if (active && iconRef.current.startAnimation) {
+        iconRef.current.startAnimation();
+      } else if (!active && iconRef.current.stopAnimation) {
+        iconRef.current.stopAnimation();
+      }
+    }
+  }, [active]);
+
+  return (
+    <button
+      onClick={onClick}
+      className={`flex-1 p-2 rounded-xl transition-all duration-200 group flex flex-col items-center justify-center gap-1 focus:outline-none ${active ? `${theme.lightBg} ${theme.text}` : 'text-gray-400 md:hover:bg-gray-100 dark:md:hover:bg-white/5 active:bg-gray-100 dark:active:bg-gray-800'}`}
+    >
+      <Icon ref={iconRef} size={24} className={`transition-transform duration-300 ${active ? 'scale-110' : 'group-hover:scale-105'}`} />
+      <span className="text-[9px] font-medium tracking-wide">{active && <span className={`w-1 h-1 ${theme.dot} rounded-full inline-block mt-1`}></span>}</span>
+    </button>
+  );
+};
 
 // --- Escape Road Game Component ---
 const EscapeRoadGame = () => {
@@ -823,6 +838,24 @@ const SplashScreen = () => {
   );
 };
 
+// --- Framer Motion Transition Variants ---
+const pageVariants = {
+  initial: (direction) => ({
+    x: direction > 0 ? 50 : -50,
+    opacity: 0,
+  }),
+  animate: {
+    x: 0,
+    opacity: 1,
+    transition: { duration: 0.3, ease: 'easeOut' },
+  },
+  exit: (direction) => ({
+    x: direction > 0 ? -50 : 50,
+    opacity: 0,
+    transition: { duration: 0.3, ease: 'easeIn' },
+  }),
+};
+
 // --- Main App Component ---
 
 const VIEWS = ['dashboard', 'planner', 'storage', 'game', 'settings'];
@@ -830,6 +863,8 @@ const VIEWS = ['dashboard', 'planner', 'storage', 'game', 'settings'];
 export default function App() {
   // --- State ---
   const [view, setView] = useState('dashboard');
+  const [direction, setDirection] = useState(0); // Tracks navigation direction for swipe animations
+
   const [darkMode, setDarkMode] = useState(false);
   const [showSplash, setShowSplash] = useState(true);
   const [colorTheme, setColorTheme] = useState('green');
@@ -840,8 +875,8 @@ export default function App() {
   const [monthlyData, setMonthlyData] = useState({});
   const [profile, setProfile] = useState({ name: 'San • dept', image: null });
   const [selectedMonth, setSelectedMonth] = useState(0);
-  const [selectedYear, setSelectedYear] = useState(2026); // Added Year State
-  const [investmentMode, setInvestmentMode] = useState('both'); // Added Mode State
+  const [selectedYear, setSelectedYear] = useState(2026);
+  const [investmentMode, setInvestmentMode] = useState('both');
 
   const [saveStatus, setSaveStatus] = useState('');
 
@@ -849,6 +884,7 @@ export default function App() {
   const [notificationsEnabled, setNotificationsEnabled] = useState(false);
   const [notificationTime, setNotificationTime] = useState('09:00');
   const [notificationStatus, setNotificationStatus] = useState('');
+  const [toastMessage, setToastMessage] = useState(null); // Added Toast state
   const lastNotificationDate = useRef(null);
 
   // Audio Context Ref
@@ -943,10 +979,10 @@ export default function App() {
         goldRes.json()
       ]);
 
-      const btcInr = btcData?.bitcoin?.inr;               // BTC price in INR
-      const usdToInr = usdInrData?.rates?.INR;            // 1 USD = X INR
-      const goldUsdPerOz = goldData?.price;               // Gold USD per troy ounce
-      const TROY_OZ_TO_GRAM = 31.1035;                    // 1 troy oz = 31.1035 grams
+      const btcInr = btcData?.bitcoin?.inr;                // BTC price in INR
+      const usdToInr = usdInrData?.rates?.INR;             // 1 USD = X INR
+      const goldUsdPerOz = goldData?.price;                // Gold USD per troy ounce
+      const TROY_OZ_TO_GRAM = 31.1035;                     // 1 troy oz = 31.1035 grams
       const goldInrPerGram = (goldUsdPerOz / TROY_OZ_TO_GRAM) * usdToInr;
 
       if (btcInr && goldInrPerGram) {
@@ -974,15 +1010,19 @@ export default function App() {
     return () => clearInterval(interval);
   }, [fetchLivePrices]);
 
-  // Updated Notification Logic
-  const triggerNotification = (message) => {
+  // Updated Robust Notification Logic for Smartphones
+  const triggerNotification = async (message) => {
 
-    // 2. Vibration (Critical for mobile feedback)
+    // 1. In-App Toast (100% Guaranteed to work on Mobile & Desktop if app is open)
+    setToastMessage(message);
+    setTimeout(() => setToastMessage(null), 5000);
+
+    // 2. Vibration (Mobile feedback)
     if ("vibrate" in navigator) {
       try {
         navigator.vibrate([200, 100, 200]);
       } catch (e) {
-        console.log("Vibration not supported");
+        console.log("Vibration not supported/blocked");
       }
     }
 
@@ -1015,16 +1055,17 @@ export default function App() {
       console.log("Audio play blocked", e);
     }
 
-    // 4. Try Native Notification
-    if (Notification.permission === "granted") {
+    // 4. Try Native Browser Notification (Fallback for background/desktop)
+    if ("Notification" in window && Notification.permission === "granted") {
       try {
+        // We try standard notification first. If it's supported and not blocked by iframe, it shows.
+        // We omit the broken blob-based Service Worker hack that crashed mobile devices.
         const notif = new Notification("Invers Wealth", {
           body: message,
           icon: "https://cdn-icons-png.flaticon.com/512/1041/1041888.png",
           badge: "https://cdn-icons-png.flaticon.com/512/1041/1041888.png",
           vibrate: [200, 100, 200],
           tag: 'invers-reminder',
-          renotify: true,
           requireInteraction: true
         });
 
@@ -1033,7 +1074,8 @@ export default function App() {
           this.close();
         };
       } catch (e) {
-        console.log("Native notification blocked by environment");
+        console.log("Native notification failed (often due to mobile iframe or Safari constraints)", e);
+        // Toast is already triggered above, so user still gets notified!
       }
     }
   };
@@ -1052,8 +1094,7 @@ export default function App() {
       const currentHour = now.getHours();
       const currentMinute = now.getMinutes();
 
-      // Robust check: Trigger if current time is equal to OR past the target time.
-      // This ensures if the browser sleeps at exactly 09:00, you still get notified at 09:01 or when it wakes up.
+      // Trigger if current time is equal to OR past the target time.
       const isPastTargetTime = currentHour > targetHour || (currentHour === targetHour && currentMinute >= targetMinute);
 
       if (isPastTargetTime) {
@@ -1168,8 +1209,8 @@ export default function App() {
   const handleSaveNotificationTime = () => {
     if (!notificationsEnabled) return;
 
-    // Request permission
-    if (Notification.permission !== "granted" && Notification.permission !== "denied") {
+    // Request permission safely
+    if ("Notification" in window && Notification.permission !== "granted" && Notification.permission !== "denied") {
       Notification.requestPermission();
     }
 
@@ -1183,11 +1224,20 @@ export default function App() {
     unlockAudio(); // Unlock audio context on interaction
 
     // Always request permission on user interaction if not granted
-    if (Notification.permission !== "granted" && Notification.permission !== "denied") {
+    if ("Notification" in window && Notification.permission !== "granted" && Notification.permission !== "denied") {
       await Notification.requestPermission();
     }
 
     triggerNotification("This is how your reminder will look! 🔔");
+  };
+
+  // Navigation Logic
+  const handleNav = (newView) => {
+    if (newView === view) return;
+    const newIndex = VIEWS.indexOf(newView);
+    const oldIndex = VIEWS.indexOf(view);
+    setDirection(newIndex > oldIndex ? 1 : -1);
+    setView(newView);
   };
 
   // --- Swipe Gesture Handlers ---
@@ -1210,11 +1260,11 @@ export default function App() {
       const currentIndex = VIEWS.indexOf(view);
       if (isLeftSwipe) {
         if (currentIndex < VIEWS.length - 1) {
-          setView(VIEWS[currentIndex + 1]);
+          handleNav(VIEWS[currentIndex + 1]);
         }
       } else {
         if (currentIndex > 0) {
-          setView(VIEWS[currentIndex - 1]);
+          handleNav(VIEWS[currentIndex - 1]);
         }
       }
     }
@@ -1223,7 +1273,7 @@ export default function App() {
   // --- Render Views ---
 
   const renderDashboard = () => (
-    <div className="space-y-6 pb-24 animate-fade-in text-gray-900 dark:text-white">
+    <div className="space-y-6 text-gray-900 dark:text-white pb-24">
       {/* Header Profile & Summary */}
       <div className="flex justify-between items-start mb-4 px-2">
         <div className="flex flex-col gap-4 items-start">
@@ -1371,7 +1421,7 @@ export default function App() {
     const daysInMonth = DAYS_IN_MONTH(selectedMonth, selectedYear);
 
     return (
-      <div className="animate-fade-in flex flex-col pb-24 text-gray-900 dark:text-white">
+      <div className="flex flex-col text-gray-900 dark:text-white pb-24">
         <div className="flex items-center justify-between mb-4 px-1">
           <div className="flex items-center gap-2">
             <h2 className="text-xl font-black text-gray-900 dark:text-white tracking-tight">
@@ -1494,7 +1544,7 @@ export default function App() {
           })}
         </div>
 
-        <Card className="animate-fade-in relative transition-all duration-500">
+        <Card className="relative transition-all duration-500">
           <div className="flex items-center gap-2 mb-3">
             <FileText size={16} className={currentTheme.text} />
             <h3 className="font-bold text-sm text-gray-900 dark:text-white">Monthly Report</h3>
@@ -1593,7 +1643,7 @@ export default function App() {
     const totalValue = totalBitcoin + totalGold;
 
     return (
-      <div className="animate-fade-in space-y-5 pb-24 text-gray-900 dark:text-white">
+      <div className="space-y-5 text-gray-900 dark:text-white pb-24">
         <h2 className="text-xl font-bold mb-4 text-gray-900 dark:text-white">Data Storage</h2>
 
         <Card className="bg-gradient-to-br from-indigo-500 to-purple-600 border-none text-white p-5">
@@ -1673,7 +1723,7 @@ export default function App() {
   }
 
   const renderSettings = () => (
-    <div className="animate-fade-in space-y-5 pb-24 text-gray-900 dark:text-white">
+    <div className="space-y-5 text-gray-900 dark:text-white pb-24">
       <h2 className="text-xl font-bold mb-4 text-gray-900 dark:text-white">Settings</h2>
 
       <Card className="p-4">
@@ -1720,7 +1770,9 @@ export default function App() {
               onChange={() => {
                 unlockAudio(); // Unlock audio context on interaction
                 if (!notificationsEnabled) {
-                  Notification.requestPermission();
+                  if ("Notification" in window && Notification.permission !== "granted" && Notification.permission !== "denied") {
+                    Notification.requestPermission();
+                  }
                 }
                 setNotificationsEnabled(!notificationsEnabled);
               }}
@@ -1750,13 +1802,14 @@ export default function App() {
                     {notificationStatus === 'saved' ? 'Saved' : 'Save'}
                   </button>
                 </div>
-                <div className="flex items-center justify-between mt-1">
-                  <p className="text-[9px] text-gray-400 italic">
-                    * Browser notification must be allowed.
+                <div className="flex items-start justify-between mt-2 gap-2">
+                  <p className="text-[9px] text-gray-400 italic leading-tight flex-1">
+                    * Browser notifications must be allowed.<br />
+                    * <span className="font-semibold text-gray-500 dark:text-gray-300">iOS/Android users:</span> Add to Home Screen (Install App) to ensure background alerts.
                   </p>
                   <button
                     onClick={handleTestNotification}
-                    className="text-[9px] font-bold px-2 py-0.5 bg-gray-200 dark:bg-gray-700 rounded text-gray-600 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
+                    className="text-[9px] font-bold px-2 py-1 bg-gray-200 dark:bg-gray-700 rounded text-gray-600 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors h-fit"
                   >
                     Test
                   </button>
@@ -1801,24 +1854,81 @@ export default function App() {
         {showSplash && <SplashScreen />}
       </AnimatePresence>
 
+      {/* Robust In-App Toast Notification */}
+      <AnimatePresence>
+        {toastMessage && (
+          <motion.div
+            initial={{ opacity: 0, y: -50, scale: 0.9 }}
+            animate={{ opacity: 1, y: 20, scale: 1 }}
+            exit={{ opacity: 0, y: -50, scale: 0.9 }}
+            className="fixed top-0 left-0 right-0 z-[200] flex justify-center px-4 pointer-events-none"
+          >
+            <div className="bg-gray-900 dark:bg-white text-white dark:text-gray-900 px-5 py-3 rounded-2xl shadow-2xl flex items-center gap-3 border border-gray-800 dark:border-gray-200 backdrop-blur-md">
+              <Bell size={18} className="text-orange-500 animate-bounce" />
+              <span className="font-bold text-sm tracking-tight">{toastMessage}</span>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       <div className="relative h-full w-full sm:max-w-md sm:mx-auto sm:bg-white/50 dark:sm:bg-gray-900/50 sm:shadow-2xl sm:h-[95vh] sm:mt-[2.5vh] sm:rounded-[40px] sm:border-[8px] sm:border-gray-200 dark:sm:border-gray-800 flex flex-col backdrop-blur-sm overflow-hidden">
 
+        {/* Animated Swipe Content Container */}
         <div
-          className="flex-1 overflow-y-auto p-4 scrollbar-hide touch-pan-y"
+          className="flex-1 relative overflow-hidden"
           onTouchStart={onTouchStart}
           onTouchMove={onTouchMove}
           onTouchEnd={onTouchEnd}
         >
-          {view === 'dashboard' && renderDashboard()}
-          {view === 'planner' && renderPlanner()}
-          {view === 'storage' && renderStorage()}
-          {view === 'settings' && renderSettings()}
+          <AnimatePresence custom={direction} mode="wait">
+            {view === 'dashboard' && (
+              <motion.div
+                key="dashboard" custom={direction} variants={pageVariants} initial="initial" animate="animate" exit="exit"
+                className="absolute inset-0 overflow-y-auto p-4 scrollbar-hide touch-pan-y"
+              >
+                {renderDashboard()}
+              </motion.div>
+            )}
+            {view === 'planner' && (
+              <motion.div
+                key="planner" custom={direction} variants={pageVariants} initial="initial" animate="animate" exit="exit"
+                className="absolute inset-0 overflow-y-auto p-4 scrollbar-hide touch-pan-y"
+              >
+                {renderPlanner()}
+              </motion.div>
+            )}
+            {view === 'storage' && (
+              <motion.div
+                key="storage" custom={direction} variants={pageVariants} initial="initial" animate="animate" exit="exit"
+                className="absolute inset-0 overflow-y-auto p-4 scrollbar-hide touch-pan-y"
+              >
+                {renderStorage()}
+              </motion.div>
+            )}
+            {view === 'settings' && (
+              <motion.div
+                key="settings" custom={direction} variants={pageVariants} initial="initial" animate="animate" exit="exit"
+                className="absolute inset-0 overflow-y-auto p-4 scrollbar-hide touch-pan-y"
+              >
+                {renderSettings()}
+              </motion.div>
+            )}
+          </AnimatePresence>
 
-          <div className={cn("flex-col items-center justify-center h-full pb-24", view === 'game' ? "flex" : "hidden")}>
+          {/* Game View Handled Separately (So the iframe doesn't unmount and lose progress) */}
+          <motion.div
+            className={cn("absolute inset-0 overflow-y-auto p-4 scrollbar-hide touch-pan-y flex-col items-center justify-center pb-24", view === 'game' ? "flex z-10" : "flex z-[-1] pointer-events-none")}
+            initial={false}
+            animate={{
+              opacity: view === 'game' ? 1 : 0,
+              x: view === 'game' ? 0 : (direction > 0 ? -50 : 50)
+            }}
+            transition={{ duration: 0.3, ease: 'easeOut' }}
+          >
             <div className="relative w-full h-full max-w-[501px] shadow-2xl rounded-[32px] overflow-hidden border-4 border-gray-200 dark:border-gray-700 bg-black">
               <EscapeRoadGame />
             </div>
-          </div>
+          </motion.div>
         </div>
 
         <div className="absolute bottom-0 left-0 right-0 sm:static p-4 z-50 bg-gradient-to-t from-gray-50 via-gray-50/95 to-transparent dark:from-gray-900 dark:via-gray-900/95 sm:from-transparent sm:via-transparent sm:to-transparent transition-all duration-300">
@@ -1827,35 +1937,35 @@ export default function App() {
               key="dashboard"
               Icon={ChartColumnIncreasingIcon}
               active={view === 'dashboard'}
-              onClick={() => setView('dashboard')}
+              onClick={() => handleNav('dashboard')}
               theme={currentTheme}
             />
             <IconButton
               key="planner"
               Icon={CalendarCheckIcon}
               active={view === 'planner'}
-              onClick={() => setView('planner')}
+              onClick={() => handleNav('planner')}
               theme={currentTheme}
             />
             <IconButton
               key="storage"
               Icon={DatabaseIcon}
               active={view === 'storage'}
-              onClick={() => setView('storage')}
+              onClick={() => handleNav('storage')}
               theme={currentTheme}
             />
             <IconButton
               key="game"
               Icon={GamepadIcon}
               active={view === 'game'}
-              onClick={() => setView('game')}
+              onClick={() => handleNav('game')}
               theme={currentTheme}
             />
             <IconButton
               key="settings"
               Icon={CogIcon}
               active={view === 'settings'}
-              onClick={() => setView('settings')}
+              onClick={() => handleNav('settings')}
               theme={currentTheme}
             />
           </div>
@@ -1896,7 +2006,7 @@ export default function App() {
           animation: fade-in 0.3s ease-out forwards;
         }
 
-        /* --- Theme Switch CSS (Provided by User) --- */
+        /* --- Theme Switch CSS --- */
         .theme-switch {
           --toggle-size: 30px;
           --container-width: 5.625em;
@@ -2096,7 +2206,7 @@ export default function App() {
           transform: translateY(-50%);
         }
 
-        /* --- 3D Switch CSS (Added) --- */
+        /* --- 3D Switch CSS --- */
         .switch {
           font-size: 17px;
           position: relative;
