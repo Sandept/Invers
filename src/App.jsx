@@ -47,7 +47,7 @@ const MONTHS = [
   "July", "August", "September", "October", "November", "December"
 ];
 
-const DAYS_IN_MONTH = (monthIndex, year = 2026) => new Date(year, monthIndex + 1, 0).getDate();
+const DAYS_IN_MONTH = (monthIndex, year = new Date().getFullYear()) => new Date(year, monthIndex + 1, 0).getDate();
 
 // --- Theme Configurations ---
 const THEMES = {
@@ -874,8 +874,8 @@ export default function App() {
   const [investments, setInvestments] = useState({});
   const [monthlyData, setMonthlyData] = useState({});
   const [profile, setProfile] = useState({ name: 'San • dept', image: null });
-  const [selectedMonth, setSelectedMonth] = useState(0);
-  const [selectedYear, setSelectedYear] = useState(2026);
+  const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth());
+  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
   const [investmentMode, setInvestmentMode] = useState('both');
 
   const [saveStatus, setSaveStatus] = useState('');
@@ -885,7 +885,14 @@ export default function App() {
   const [notificationTime, setNotificationTime] = useState('09:00');
   const [notificationStatus, setNotificationStatus] = useState('');
   const [toastMessage, setToastMessage] = useState(null); // Added Toast state
+  const [isYearDropdownOpen, setIsYearDropdownOpen] = useState(false); // Added Custom Year Modal state
   const lastNotificationDate = useRef(null);
+
+  // Current Date Variables
+  const today = new Date();
+  const currentYear = today.getFullYear();
+  const currentMonth = today.getMonth();
+  const currentDate = today.getDate();
 
   // Audio Context Ref
   const audioCtxRef = useRef(null);
@@ -932,7 +939,6 @@ export default function App() {
       setColorTheme(THEMES[savedTheme] ? savedTheme : 'green');
       setNotificationsEnabled(parsed.notificationsEnabled || false);
       setNotificationTime(parsed.notificationTime || '09:00');
-      if (parsed.selectedYear) setSelectedYear(parsed.selectedYear);
       if (parsed.investmentMode) setInvestmentMode(parsed.investmentMode);
     }
 
@@ -953,13 +959,12 @@ export default function App() {
         colorTheme,
         notificationsEnabled,
         notificationTime,
-        selectedYear,
         investmentMode
       }));
     } catch (e) {
       console.warn("Storage quota exceeded or error saving data", e);
     }
-  }, [investments, monthlyData, profile, darkMode, colorTheme, notificationsEnabled, notificationTime, selectedYear, investmentMode]);
+  }, [investments, monthlyData, profile, darkMode, colorTheme, notificationsEnabled, notificationTime, investmentMode]);
 
   // --- Live Price Fetching ---
   const fetchLivePrices = useCallback(async () => {
@@ -1428,18 +1433,13 @@ export default function App() {
               {MONTHS[selectedMonth]}
             </h2>
             <div className="relative flex items-center">
-              <select
-                value={selectedYear}
-                onChange={(e) => setSelectedYear(Number(e.target.value))}
-                className="appearance-none bg-transparent text-xl font-black text-gray-400 outline-none cursor-pointer pr-4 hover:text-gray-500 transition-colors"
+              <button
+                onClick={() => setIsYearDropdownOpen(true)}
+                className="flex items-center gap-1 text-xl font-black text-gray-400 hover:text-gray-500 transition-colors cursor-pointer outline-none"
               >
-                {Array.from({ length: 2100 - 2026 + 1 }, (_, i) => 2026 + i).map(y => (
-                  <option key={y} value={y} className="text-base text-gray-900 dark:bg-gray-800 dark:text-white">
-                    {y}
-                  </option>
-                ))}
-              </select>
-              <ChevronRight className="absolute right-0 text-gray-400 pointer-events-none rotate-90" size={14} />
+                <span>{selectedYear}</span>
+                <ChevronRight className="rotate-90 text-gray-400" size={16} />
+              </button>
             </div>
           </div>
           <div className="flex items-center gap-1">
@@ -1513,6 +1513,7 @@ export default function App() {
             // Compatibility logic for legacy 2026 keys without year prefix
             const legacyStatus = selectedYear === 2026 && investments[`${selectedMonth}-${i + 1}`];
             const status = investments[`${selectedYear}-${selectedMonth}-${i + 1}`] || legacyStatus;
+            const isToday = selectedYear === currentYear && selectedMonth === currentMonth && (i + 1) === currentDate;
 
             let activeClasses = 'bg-white dark:bg-gray-800 border-gray-100 dark:border-gray-700 text-gray-600 dark:text-gray-300 hover:shadow-md';
             let IconComp = null;
@@ -1526,6 +1527,10 @@ export default function App() {
             } else if (status === 'both' || status === true) {
               activeClasses = `${currentTheme.primary} ${currentTheme.border} text-white shadow-md ${currentTheme.shadow} transform scale-95`;
               IconComp = <CheckCircle2 size={12} className="mt-0.5 animate-bounce-short" />;
+            }
+
+            if (isToday) {
+              activeClasses = `current-day-gradient transform ${status ? 'scale-95 ring-2 ring-offset-2 dark:ring-offset-gray-900 ring-emerald-400' : 'scale-105 shadow-xl'} z-10 text-white border-0`;
             }
 
             return (
@@ -1854,6 +1859,46 @@ export default function App() {
         {showSplash && <SplashScreen />}
       </AnimatePresence>
 
+      {/* Custom Year Dropdown Modal */}
+      <AnimatePresence>
+        {isYearDropdownOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[250] flex items-center justify-center bg-black/60 backdrop-blur-sm px-4"
+            onClick={() => setIsYearDropdownOpen(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.95, opacity: 0, y: 20 }}
+              transition={{ duration: 0.2 }}
+              className="bg-white dark:bg-[#1a1c23] w-full max-w-[320px] rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[70vh] border border-gray-200 dark:border-gray-800"
+              onClick={e => e.stopPropagation()}
+            >
+              <div className="p-5 border-b border-gray-100 dark:border-gray-800/60 bg-gray-50 dark:bg-gray-800/20 flex justify-center items-center relative">
+                <h3 className="font-black text-lg text-gray-900 dark:text-white">Select Year</h3>
+              </div>
+              <div className="overflow-y-auto flex-1 scrollbar-hide py-2">
+                {Array.from({ length: 2100 - 2026 + 1 }, (_, i) => 2026 + i).map(y => (
+                  <button
+                    key={y}
+                    onClick={() => { setSelectedYear(y); setIsYearDropdownOpen(false); }}
+                    className={`w-full flex items-center justify-between px-6 py-3.5 transition-colors ${y === selectedYear ? 'bg-gray-100/50 dark:bg-gray-800/50' : 'hover:bg-gray-50 dark:hover:bg-gray-800/30'}`}
+                  >
+                    <span className={`text-lg font-bold ${y === selectedYear ? 'text-gray-900 dark:text-white' : 'text-gray-500 dark:text-gray-400'}`}>{y}</span>
+                    <div className={`w-5 h-5 rounded-full border-[2.5px] flex items-center justify-center transition-colors ${y === selectedYear ? currentTheme.border : 'border-gray-300 dark:border-gray-600'}`}>
+                      {y === selectedYear && <div className={`w-2.5 h-2.5 rounded-full ${currentTheme.primary}`} />}
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Robust In-App Toast Notification */}
       <AnimatePresence>
         {toastMessage && (
@@ -2004,6 +2049,18 @@ export default function App() {
         }
         .animate-fade-in {
           animation: fade-in 0.3s ease-out forwards;
+        }
+
+        .current-day-gradient {
+            background: linear-gradient(135deg, #10b981 0%, #eab308 50%, #f97316 100%);
+            background-size: 200% 200%;
+            animation: gradient-shift 3s ease infinite;
+            box-shadow: 0 4px 15px rgba(234, 179, 8, 0.4);
+        }
+        @keyframes gradient-shift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
         }
 
         /* --- Theme Switch CSS --- */

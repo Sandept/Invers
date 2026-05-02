@@ -2,7 +2,7 @@
   "name": "invers",
   "private": true,
   "version": "0.0.0",
-  "homepage": "https://github.com/Sandept/Invers",
+  "homepage": "https://sandept.github.io/Invers",
   "type": "module",
   "scripts": {
     "dev": "vite",
